@@ -12,7 +12,6 @@ caddy adapt --config /conf/Caddyfile --pretty --validate > /conf/caddy.json
 jsonVars=""
 jqOp=""
 
-
 if [ -d "/conf/apps" ] && [ -n "$(ls -A /conf/apps)" ]; then
     for fileName in /conf/apps/*.json; do
 
