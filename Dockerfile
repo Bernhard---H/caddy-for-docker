@@ -12,7 +12,7 @@ RUN apk add bash jq
 
 COPY --from=build /usr/bin/caddy /usr/bin/caddy
 
-ADD ./entrypoint.sh /
+COPY ./entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT [ "/usr/bin/env", "bash", "/entrypoint.sh" ]
