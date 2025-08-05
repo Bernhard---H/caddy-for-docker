@@ -15,11 +15,10 @@ services:
       - ./apps:/etc/caddy/apps
       - ./sites-available:/etc/caddy/sites-available
       - ./sites-enabled:/etc/caddy/sites-enabled
-      #- ./site:/srv
       - data:/data
       - config:/config
     env_file:
-      - ./caddy.secrets.env
+      - ./caddy.env
     networks:
       caddy:
 
