@@ -1,0 +1,34 @@
+
+services:
+  caddy:
+    build: .
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./conf.d:/etc/caddy/conf.d
+      - ./apps:/etc/caddy/apps
+      - ./sites-available:/etc/caddy/sites-available
+      - ./sites-enabled:/etc/caddy/sites-enabled
+      #- ./site:/srv
+      - data:/data
+      - config:/config
+    env_file:
+      - ./caddy.secrets.env
+    networks:
+      caddy:
+
+volumes:
+  data:
+  config:
+
+networks:
+  caddy:
+    external: true
+    name: caddy
+

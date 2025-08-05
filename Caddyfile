@@ -1,0 +1,25 @@
+{
+    email bernhard+certbot@grub1.at
+    acme_dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    cert_issuer acme {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+    renew_interval 12h
+
+
+    servers :443 {
+        protocols h1 h2 h3
+        name https
+        strict_sni_host on
+    }
+
+    servers :80 {
+        protocols h1
+        name http
+    }    
+}
+
+import conf.d/*
+import sites-enabled/*
+
+
