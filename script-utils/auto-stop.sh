@@ -3,5 +3,7 @@
 
 containerIDs=$(docker container ls --filter "label=at.grub1.auto-stop" --quiet | tr '\n' ' ')
 
-docker container stop $containerIDs
+if [[ -n $containerIDs ]]; then
+    docker container stop $containerIDs
+fi
 
