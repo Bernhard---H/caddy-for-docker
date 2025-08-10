@@ -4,6 +4,7 @@
     cert_issuer acme {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
+    #acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
     renew_interval 12h
 
 
