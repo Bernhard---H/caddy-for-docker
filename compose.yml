@@ -18,7 +18,7 @@ services:
       - data:/data
       - config:/config
     env_file:
-      - ./caddy.env
+      - ./local-config/secrets/caddy.env
     networks:
       caddy:
 

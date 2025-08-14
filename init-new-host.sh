@@ -6,8 +6,9 @@ docker network inspect caddy > /dev/null 2>&1 || \
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-defaultConf="${SCRIPT_DIR}/.defaults"
-localConf="${SCRIPT_DIR}/../caddy"
+defaultConf="${SCRIPT_DIR}/defaults"
+localConf="$(realpath "${SCRIPT_DIR}/../caddy")"
+
 if [ ! -d "${localConf}" ]; then
     echo "creating local config dir"
     mkdir "${localConf}"
@@ -15,11 +16,20 @@ if [ ! -d "${localConf}" ]; then
     chmod 0755 "${localConf}"
     touch "${localConf}/.gitkeep"
 fi
-if [ ! -f "${localConf}/caddy.env" ]; then
-    echo "creating local config file: caddy.env"
-    cp "${defaultConf}/caddy.env" "${localConf}/"
-    chown root:root "${localConf}/caddy.env"
-    chmod 0600 "${localConf}/caddy.env"
+
+if [ ! -d "${localConf}/secrets" ]; then
+    echo "creating local config dir: secrets"
+    mkdir "${localConf}/secrets"
+    chown root:root "${localConf}/secrets"
+    chmod 0755 "${localConf}/secrets"
+    touch "${localConf}/secrets/.gitkeep"
+fi
+if [ ! -f "${localConf}/secrets/caddy.env" ]; then
+    echo "creating local secrets files"
+    cp "${defaultConf}/caddy.env" "${localConf}/secrets/"
+    cp "${defaultConf}/secrets.gitignore" "${localConf}/secrets/.gitignore"
+    chown root:root "${localConf}/secrets/caddy.env"
+    chmod 0600 "${localConf}/secrets/caddy.env"
 fi
 
 if [ ! -d "${localConf}/apps" ]; then
@@ -46,7 +56,7 @@ if [ ! -d "${localConf}/sites-enabled" ]; then
     touch "${localConf}/sites-enabled/.gitkeep"
 fi
 
-if [ ! -f "${SCRIPT_DIR}/local-config" ]; then
+if [ ! -d "${SCRIPT_DIR}/local-config" ]; then
     echo "creating link to local config dir"
     ln -s "${localConf}/" "${SCRIPT_DIR}/local-config"
 fi
