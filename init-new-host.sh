@@ -6,12 +6,51 @@ docker network inspect caddy > /dev/null 2>&1 || \
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-if [ ! -f "${SCRIPT_DIR}/caddy.env" ]; then
-    echo "create local only config file .env"
-    touch "${SCRIPT_DIR}/caddy.env"
-    chown root:root "${SCRIPT_DIR}/caddy.env"
-    chmod 0600 "${SCRIPT_DIR}/caddy.env"
+defaultConf="${SCRIPT_DIR}/.defaults"
+localConf="${SCRIPT_DIR}/../caddy"
+if [ ! -d "${localConf}" ]; then
+    echo "creating local config dir"
+    mkdir "${localConf}"
+    chown root:root "${localConf}"
+    chmod 0755 "${localConf}"
+    touch "${localConf}/.gitkeep"
 fi
+if [ ! -f "${localConf}/caddy.env" ]; then
+    echo "creating local config file: caddy.env"
+    cp "${defaultConf}/caddy.env" "${localConf}/"
+    chown root:root "${localConf}/caddy.env"
+    chmod 0600 "${localConf}/caddy.env"
+fi
+
+if [ ! -d "${localConf}/apps" ]; then
+    echo "creating local config dir: apps"
+    mkdir "${localConf}/apps"
+    chown root:root "${localConf}/apps"
+    chmod 0755 "${localConf}/apps"
+    touch "${localConf}/apps/.gitkeep"
+fi
+
+if [ ! -d "${localConf}/sites-available" ]; then
+    echo "creating local config dir: sites-available"
+    mkdir "${localConf}/sites-available"
+    chown root:root "${localConf}/sites-available"
+    chmod 0755 "${localConf}/sites-available"
+    touch "${localConf}/sites-available/.gitkeep"
+fi
+
+if [ ! -d "${localConf}/sites-enabled" ]; then
+    echo "creating local config dir: sites-enabled"
+    mkdir "${localConf}/sites-enabled"
+    chown root:root "${localConf}/sites-enabled"
+    chmod 0755 "${localConf}/sites-enabled"
+    touch "${localConf}/sites-enabled/.gitkeep"
+fi
+
+if [ ! -f "${SCRIPT_DIR}/local-config" ]; then
+    echo "creating link to local config dir"
+    ln -s "${localConf}/" "${SCRIPT_DIR}/local-config"
+fi
+
 
 if [ ! -f "/etc/cron.daily/auto-stop-container" ]; then
     echo "setup auto-stop script"
