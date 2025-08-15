@@ -21,6 +21,7 @@ services:
       - ./local-config/secrets/caddy.env
     networks:
       caddy:
+        ipv4_address: 10.17.255.250
 
 volumes:
   data:
