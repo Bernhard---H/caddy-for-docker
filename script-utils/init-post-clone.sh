@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-apt-get -yq install jq yq
+apt-get -yqq install jq yq
 
 docker network inspect caddy > /dev/null 2>&1 || {
     echo "create docker network \"caddy\"";
