@@ -13,6 +13,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./conf.d:/etc/caddy/conf.d
       - ../caddy/apps:/etc/caddy/apps
+      - ../caddy/imports:/etc/caddy/imports
       - ../caddy/sites-available:/etc/caddy/sites-available
       - ../caddy/sites-enabled:/etc/caddy/sites-enabled
       - data:/data

@@ -56,6 +56,14 @@ if [ ! -d "${localConf}/sites-enabled" ]; then
     touch "${localConf}/sites-enabled/.gitkeep"
 fi
 
+if [ ! -d "${localConf}/imports" ]; then
+    echo "creating local config dir: imports"
+    mkdir "${localConf}/imports"
+    chown root:root "${localConf}/imports"
+    chmod 0755 "${localConf}/imports"
+    touch "${localConf}/imports/.gitkeep"
+fi
+
 if [ ! -d "${SCRIPT_DIR}/local-config" ]; then
     echo "creating link to local config dir"
     ln -s "${localConf}/" "${SCRIPT_DIR}/local-config"
