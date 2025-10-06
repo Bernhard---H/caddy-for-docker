@@ -5,10 +5,11 @@ docker network inspect caddy > /dev/null 2>&1 || {
     docker network create --driver bridge --subnet "10.17.0.0/16" --gateway "10.17.255.254" --ipv6=false caddy
 }
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+REPO_DIR=$(realpath -- "${SCRIPT_DIR}")
 
-defaultConf="${SCRIPT_DIR}/defaults"
-localConf="$(realpath "${SCRIPT_DIR}/../caddy")"
+defaultConf="${REPO_DIR}/defaults"
+localConf="$(realpath "${REPO_DIR}/../caddy")"
 
 if [ ! -d "${localConf}" ]; then
     echo "creating local config dir"
@@ -65,20 +66,20 @@ if [ ! -d "${localConf}/imports" ]; then
     touch "${localConf}/imports/.gitkeep"
 fi
 
-if [ ! -d "${SCRIPT_DIR}/local-config" ]; then
+if [ ! -d "${REPO_DIR}/local-config" ]; then
     echo "creating link to local config dir"
-    ln -s "${localConf}/" "${SCRIPT_DIR}/local-config"
+    ln -s "${localConf}/" "${REPO_DIR}/local-config"
 fi
 
 
 if [ ! -f "/etc/cron.daily/auto-stop-container" ]; then
     echo "setup auto-stop script"
-    ln -s "${SCRIPT_DIR}/script-utils/auto-stop.sh" "/etc/cron.daily/auto-stop-container"
+    ln -s "${REPO_DIR}/script-utils/auto-stop.sh" "/etc/cron.daily/auto-stop-container"
 fi
 
 if [ ! -f "/etc/cron.daily/auto-update-container" ]; then
     echo "setup auto-update script"
-    ln -s "${SCRIPT_DIR}/script-utils/auto-update.sh" "/etc/cron.daily/auto-update-container"
+    ln -s "${REPO_DIR}/script-utils/auto-update.sh" "/etc/cron.daily/auto-update-container"
 fi
 
 echo "all done."
