@@ -88,7 +88,7 @@ if [ ! -d "${REPO_DIR}/local-config" ]; then
 fi
 
 
-if [ ! -f "/etc/cron.daily/caddy-daily" ]; then
+if [ ! -L "/etc/cron.daily/caddy-daily" ]; then
     echo "setup automatic execution of caddy-daily script using cron-jobs"
     ln -s "${REPO_DIR}/script-utils/caddy-daily.sh" "/etc/cron.daily/caddy-daily"
 fi
