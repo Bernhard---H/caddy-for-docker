@@ -72,14 +72,9 @@ if [ ! -d "${REPO_DIR}/local-config" ]; then
 fi
 
 
-if [ ! -f "/etc/cron.daily/auto-stop-container" ]; then
-    echo "setup auto-stop script"
-    ln -s "${REPO_DIR}/script-utils/auto-stop.sh" "/etc/cron.daily/auto-stop-container"
-fi
-
-if [ ! -f "/etc/cron.daily/auto-update-container" ]; then
-    echo "setup auto-update script"
-    ln -s "${REPO_DIR}/script-utils/auto-update.sh" "/etc/cron.daily/auto-update-container"
+if [ ! -f "/etc/cron.daily/caddy-daily" ]; then
+    echo "setup automatic execution of caddy-daily script using cron-jobs"
+    ln -s "${REPO_DIR}/script-utils/caddy-daily.sh" "/etc/cron.daily/caddy-daily"
 fi
 
 echo "all done."
