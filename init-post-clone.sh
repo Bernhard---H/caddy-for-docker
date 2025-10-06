@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-echo "createIfNotExists docker network \"caddy\""
-docker network inspect caddy > /dev/null 2>&1 || \
+docker network inspect caddy > /dev/null 2>&1 || {
+    echo "create docker network \"caddy\"";
     docker network create --driver bridge --subnet "10.17.0.0/16" --gateway "10.17.255.254" --ipv6=false caddy
+}
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -80,3 +81,4 @@ if [ ! -f "/etc/cron.daily/auto-update-container" ]; then
     ln -s "${SCRIPT_DIR}/script-utils/auto-update.sh" "/etc/cron.daily/auto-update-container"
 fi
 
+echo "all done."
