@@ -1,4 +1,4 @@
-# Setup Docker-Compose Projects with Caddy Reverse-Proxy
+# Docker-Compose + Caddy Reverse-Proxy
 
 ## Installation
 
