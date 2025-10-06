@@ -8,10 +8,7 @@ docker network inspect caddy > /dev/null 2>&1 || {
 }
 
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
-echo "script dir: $SCRIPT_DIR"
 REPO_DIR=$(realpath -- "${SCRIPT_DIR}/..")
-echo "repo dir: $REPO_DIR"
-exit 1
 
 defaultConf="${REPO_DIR}/defaults"
 localConf="$(realpath "${REPO_DIR}/../caddy")"
