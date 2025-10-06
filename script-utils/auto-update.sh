@@ -10,5 +10,6 @@ while IFS= read -r labelsObject; do
     docker compose --project-directory "$projectDir" up -d "$serviceName"
 done <<< "$(docker container inspect --format "{{json .Config.Labels}}" $(docker container ls --filter "label=at.grub1.auto-update=image" --quiet))"
 
-echo "done"
+echo "done updating, starting cleanup: "
+docker image prune -f -a --filter "until=24h"
 
