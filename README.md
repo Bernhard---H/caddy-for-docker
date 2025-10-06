@@ -25,5 +25,5 @@ After the installation, you have to manually call the post-clone script, as git 
 # change directory to your caddy-config repo:
 #cd /opt/apps/.caddy
 # start the post-clone script:
-./init-new-host.sh
+./init-post-clone.sh
 ```
