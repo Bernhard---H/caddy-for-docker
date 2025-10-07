@@ -89,20 +89,21 @@ fi
 
 # load network.env variables:
 if [ -f "${REPO_DIR}/.network.env" ]; then
-    echo "loading local custom network config"
+    echo "loading local initial network config"
     export $(grep --invert-match '#' "${REPO_DIR}/.network.env" | xargs)
 else
     echo "loading default network config"
-    export $(grep --invert-match '#' "${REPO_DIR}/network.env" | xargs)
+    export $(grep --invert-match '#' "${defaultConf}/network.env" | xargs)
+
+    echo "safe initial caddy networking config"
+    cp "${defaultConf}/network.env" "${REPO_DIR}/.network.env"
+    if ! git diff --exit-code "${defaultConf}/network.env"; then
+        echo "restoring defaults"
+        git checkout HEAD -- "${defaultConf}/network.env"
+    fi
 fi
 
 docker network inspect caddy > /dev/null 2>&1 || {
-    if [ ! -f "${REPO_DIR}/.network.env" ] && ! git diff --exit-code "${REPO_DIR}/network.env"; then
-        echo "setup local custom caddy networking config"
-        cp "${REPO_DIR}/network.env" "${REPO_DIR}/.network.env"
-        git checkout HEAD -- "${REPO_DIR}/network.env"
-    fi
-
     echo "create docker network \"caddy\"";
     docker network create --driver bridge --subnet "10.17.0.0/16" --gateway "10.17.255.254" --ipv6=false caddy
 }
