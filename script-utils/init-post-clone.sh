@@ -88,17 +88,17 @@ fi
 
 
 # load network.env variables:
-if [ -f "${REPO_DIR}/.network.env" ]; then
-    echo "loading local initial network config"
-    export $(grep --invert-match '#' "${REPO_DIR}/.network.env" | xargs)
+if [ -f "${REPO_DIR}/.env" ]; then
+    echo "loading local initial docker config"
+    export $(grep --invert-match '#' "${REPO_DIR}/.env" | xargs)
 else
     echo "loading default network config"
     export $(grep --invert-match '#' "${defaultConf}/network.env" | xargs)
 
     echo "safe initial caddy networking config"
-    cp "${defaultConf}/network.env" "${REPO_DIR}/.network.env"
-    chmod 0444 "${REPO_DIR}/.network.env"
-    chattr +i "${REPO_DIR}/.network.env"
+    cp "${defaultConf}/network.env" "${REPO_DIR}/.env"
+    chmod 0444 "${REPO_DIR}/.env"
+    chattr +i "${REPO_DIR}/.env"
     if ! git diff --exit-code "${defaultConf}/network.env"; then
         echo "restoring defaults"
         git checkout HEAD -- "${defaultConf}/network.env"
