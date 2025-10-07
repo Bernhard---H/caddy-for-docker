@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-apt-get -yqq install jq yq
-
-docker network inspect caddy > /dev/null 2>&1 || {
-    echo "create docker network \"caddy\"";
-    docker network create --driver bridge --subnet "10.17.0.0/16" --gateway "10.17.255.254" --ipv6=false caddy
-}
-
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 REPO_DIR=$(realpath -- "${SCRIPT_DIR}/..")
 # sanity-check $REPO_DIR path:
@@ -92,5 +85,28 @@ if [ ! -L "/etc/cron.daily/caddy-daily" ]; then
     echo "setup automatic execution of caddy-daily script using cron-jobs"
     ln -s "${REPO_DIR}/script-utils/caddy-daily.sh" "/etc/cron.daily/caddy-daily"
 fi
+
+
+# load network.env variables:
+if [ -f "${REPO_DIR}/.network.env" ]; then
+    echo "loading local custom network config"
+    export $(grep --invert-match '#' "${REPO_DIR}/.network.env" | xargs)
+else
+    echo "loading default network config"
+    export $(grep --invert-match '#' "${REPO_DIR}/network.env" | xargs)
+fi
+
+docker network inspect caddy > /dev/null 2>&1 || {
+    if [ ! -f "${REPO_DIR}/.network.env" ] && ! git diff --exit-code "${REPO_DIR}/network.env"; then
+        echo "setup local custom caddy networking config"
+        cp "${REPO_DIR}/network.env" "${REPO_DIR}/.network.env"
+        git checkout HEAD -- "${REPO_DIR}/network.env"
+    fi
+
+    echo "create docker network \"caddy\"";
+    docker network create --driver bridge --subnet "10.17.0.0/16" --gateway "10.17.255.254" --ipv6=false caddy
+}
+
+apt-get -yqq install jq yq
 
 echo "all done."
