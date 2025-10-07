@@ -98,6 +98,7 @@ else
     echo "safe initial caddy networking config"
     cp "${defaultConf}/network.env" "${REPO_DIR}/.network.env"
     chmod 0444 "${REPO_DIR}/.network.env"
+    chattr +i "${REPO_DIR}/.network.env"
     if ! git diff --exit-code "${defaultConf}/network.env"; then
         echo "restoring defaults"
         git checkout HEAD -- "${defaultConf}/network.env"
@@ -106,7 +107,7 @@ fi
 
 docker network inspect caddy > /dev/null 2>&1 || {
     echo "create docker network \"caddy\"";
-    docker network create --driver bridge --subnet "10.17.0.0/16" --gateway "10.17.255.254" --ipv6=false caddy
+    docker network create --driver bridge --subnet "${CADDY_IPv4_SUBNET}" --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" --ipv6=false caddy
 }
 
 apt-get -yqq install jq yq

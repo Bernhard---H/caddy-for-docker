@@ -20,12 +20,12 @@ services:
       - config:/config
     env_file:
       - ./local-config/secrets/caddy.env
-      - ./network.env
+      - ./.network.env
     labels:
       at.grub1.auto-update: build
     networks:
       caddy:
-        ipv4_address: 10.17.255.250
+        ipv4_address: "${CADDY_IPv4_APP_CONTAINER}"
 
 volumes:
   data:
