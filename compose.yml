@@ -19,8 +19,10 @@ services:
       - data:/data
       - config:/config
     env_file:
-      - ./local-config/secrets/caddy.env
-      - ./.network.env
+      - path: ./local-config/secrets/caddy.env
+        required: true
+      - path: ./.network.env
+        required: true
     labels:
       at.grub1.auto-update: build
     networks:
