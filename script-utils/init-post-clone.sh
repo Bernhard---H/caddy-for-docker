@@ -97,6 +97,7 @@ else
 
     echo "safe initial caddy networking config"
     cp "${defaultConf}/network.env" "${REPO_DIR}/.network.env"
+    chmod 0444 "${REPO_DIR}/.network.env"
     if ! git diff --exit-code "${defaultConf}/network.env"; then
         echo "restoring defaults"
         git checkout HEAD -- "${defaultConf}/network.env"
