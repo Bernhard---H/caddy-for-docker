@@ -1,7 +1,7 @@
 
 services:
   caddy:
-    build: .
+    build: ./.docker
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
