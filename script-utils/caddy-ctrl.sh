@@ -51,8 +51,8 @@ Commands:
 
   * g[it] update
 
-  * c[onfig] enable <filename>
-  * c[onfig] disable <filename>
+  * s[ite] enable <filename>
+  * s[ite] disable <filename>
 
 Global Flags:
 =============
@@ -60,7 +60,7 @@ Global Flags:
   -h | --help
   -v
   -vv
-  --log {error|warn|info|debug}
+  --log {error|warn|info|debug|trace}
   --trace
 
 "
@@ -68,11 +68,12 @@ Global Flags:
 #################################################
 
 # from Syslog spec: https://www.rfc-editor.org/rfc/rfc5424#section-6.2.1
-declare -rA LOG_LEVEL_MAP=( ["error"]="3" ["warn"]="4" ["info"]="6" ["debug"]="7" )
-declare -r LOGERROR="error"
-declare -r LOGWARN="warn"
-declare -r LOGINFO="info"
-declare -r LOGDEBUG="debug"
+declare -rA LOG_LEVEL_MAP=( ["error"]="3" ["warn"]="4" ["info"]="6" ["debug"]="7" ["trace"]="8" )
+declare -r ERROR="error"
+declare -r WARN="warn"
+declare -r INFO="info"
+declare -r DEBUG="debug"
+declare -r TRACE="trace"
 lastErrorCode=0
 activeLogLevel=4
 
@@ -133,36 +134,11 @@ fi
 declare -r RETURN_TRUE=0
 declare -r RETURN_FALSE=1
 
-# Defaults
-primaryCommand=
-
-case "$1" in
-  help | h | --help | -h)
-    print_usage
-    endScript
-    ;;
-  *)
-    log $LOGERROR "Unknown argument: $1"
-    print_usage
-    endScript 1
-    ;;
-esac
-
-
-installOnSource=$RETURN_TRUE
-installOnTarget=$RETURN_TRUE
-SOURCE_DISK=
-SOURCE_FILE=
-SSH_TARGET=
-TARGET_DISK=
-TARGET_FILE=
-DO_TRANSFER=$RETURN_FALSE
-verify=$RETURN_FALSE
+commandGroup=
+commandName=
 printTrace=$RETURN_FALSE
 
-
-# Grab the command line arguments.
-while test -n "$1"; do
+parseGlobalFlags() {
   case "$1" in
     --help | -h)
       print_usage
@@ -170,14 +146,20 @@ while test -n "$1"; do
       ;;
     -v)
       activeLogLevel=6
+      return 1
       ;;
     -vv)
+      activeLogLevel=7
+      return 1
+      ;;
+    -vvv)
       activeLogLevel=8
+      return 1
       ;;
     --log)
       if [ "${array[${2}]+abc}" ]; then
         activeLogLevel="${array[${2}]}"
-        shift
+        return 2
       else
         log $LOGERROR "Unknown loglevel: $2"
         print_usage
@@ -186,15 +168,86 @@ while test -n "$1"; do
       ;;
     --trace)
       printTrace=$RETURN_TRUE
-      ;;
-    *)
-      log $LOGERROR "Unknown argument: $1"
-      print_usage
-      endScript 1
+      return 1
       ;;
   esac
-  shift
+  return 0
+}
+
+parseDockerFlags() {
+  while [ -z "$commandName" ]; do
+    shiftCount=1
+    case "${1,,}" in
+      h | help)
+        print_usage
+        endScript
+        ;;
+      logs)
+        commandName="logs"
+        ;;
+      start)
+        commandName="start"
+        ;;
+      stop)
+        commandName="stop"
+        ;;
+      restart)
+        commandName="restart"
+        ;;
+      update)
+        commandName="update"
+        ;;
+      *)
+        parseGlobalFlags "$@"
+        shiftCount="$?"
+        if (( shiftCount <= 0 )); then
+          log $LOGERROR "Unknown argument: $1"
+          print_usage
+          endScript 1
+        fi
+        ;;
+    esac
+    if (( 0 < shiftCount )); then
+      shift $shiftCount
+    else
+  done
+}
+
+while [ -z "$commandGroup" ]; do
+  shiftCount=1
+  case "${1,,}" in
+    h | help)
+      print_usage
+      endScript
+      ;;
+    d | docker)
+      commandGroup="docker"
+      parseDockerFlags "$@"
+      ;;
+    g | git)
+      commandGroup="git"
+      parseGitFlags "$@"
+      ;;
+    s | site)
+      commandGroup="site"
+      parseSiteFlags "$@"
+      ;;
+    *)
+      parseGlobalFlags "$@"
+      shiftCount="$?"
+      if (( shiftCount <= 0 )); then
+        log $LOGERROR "Unknown argument: $1"
+        print_usage
+        endScript 1
+      fi
+      ;;
+  esac
+  if (( 0 < shiftCount )); then
+    shift $shiftCount
+  else
 done
+
+
 
 #####################################################################
 # Program Functions                                                 #
