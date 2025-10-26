@@ -235,7 +235,6 @@ if [ $? -ne 0 ]; then
   echo "Error while analyzing the script arguments" >&2
   exit 2
 fi
-
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
@@ -258,6 +257,13 @@ done
 
 # Command parsing
 # ===============
+
+if [ $# -lt 1 ]; then
+  log $ERROR "invalid number of arguments have been supplied: Please add the command you intend to use."
+  print_usage
+  endScript 6
+fi
+
 
 tryCommand="${1,,}"
 case "${tryCommand}" in
@@ -289,12 +295,6 @@ shift
 
 # Command Flags parsing
 # =====================
-
-if [ $# -lt 1 ]; then
-  log $ERROR "invalid number of arguments have been supplied: Please add the command you intend to use."
-  print_usage
-  endScript 6
-fi
 
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
