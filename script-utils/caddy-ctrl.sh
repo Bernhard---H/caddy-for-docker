@@ -28,17 +28,24 @@ trap 'errexit' ERR
 set -o errtrace
 
 PROGPATH=`dirname $0`
-SCRIPT="${0:-caddy-ctrl.sh}"
+SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 
 print_usage() {
   echo "
-Usage: ${SCRIPT} --help
-Usage: ${SCRIPT} <COMMAND>
+Usage: ${SCRIPT_NAME} --help
+Usage: ${SCRIPT_NAME} <COMMAND>
 
 Description:
 ============
 
   CLI tool for controlling the caddy container.
+
+Command-Groups:
+===============
+
+  * docker
+  * git
+  * site
 
 Commands:
 =========
@@ -58,10 +65,8 @@ Global Flags:
 =============
 
   -h | --help
-  -v
-  -vv
+  -v                  may be used mulitple times for increased logging volume
   --log {error|warn|info|debug|trace}
-  --trace
 
 "
 }
@@ -93,7 +98,7 @@ function setError()
   if [[ "$lastErrorCode" -eq 0 ]]; then
     lastErrorCode="${1:-${ERROR_ERR_UNKNOWN}}"
   fi
-  log $LOGERROR "program state changed to NOT_OK with code: $1  current exit code: $lastErrorCode"
+  log $ERROR "program state changed to NOT_OK with code: $1  current exit code: $lastErrorCode"
 }
 
 function endScript()
@@ -125,54 +130,10 @@ pettyPrintBytes() {
 # Make sure the correct number of command line
 # arguments have been supplied
 if [ $# -lt 1 ]; then
-  log $LOGERROR "invalid number of arguments have been supplied: $#"
+  log $ERROR "invalid number of arguments have been supplied: $#"
   print_usage
   endScript 1
 fi
-
-# general purpos constants:
-declare -r RETURN_TRUE=0
-declare -r RETURN_FALSE=1
-
-commandGroup=
-commandName=
-printTrace=$RETURN_FALSE
-
-parseGlobalFlags() {
-  case "$1" in
-    --help | -h)
-      print_usage
-      endScript
-      ;;
-    -v)
-      activeLogLevel=6
-      return 1
-      ;;
-    -vv)
-      activeLogLevel=7
-      return 1
-      ;;
-    -vvv)
-      activeLogLevel=8
-      return 1
-      ;;
-    --log)
-      if [ "${array[${2}]+abc}" ]; then
-        activeLogLevel="${array[${2}]}"
-        return 2
-      else
-        log $LOGERROR "Unknown loglevel: $2"
-        print_usage
-        endScript 1
-      fi
-      ;;
-    --trace)
-      printTrace=$RETURN_TRUE
-      return 1
-      ;;
-  esac
-  return 0
-}
 
 parseDockerFlags() {
   while [ -z "$commandName" ]; do
@@ -201,7 +162,7 @@ parseDockerFlags() {
         parseGlobalFlags "$@"
         shiftCount="$?"
         if (( shiftCount <= 0 )); then
-          log $LOGERROR "Unknown argument: $1"
+          log $ERROR "Unknown argument: $1"
           print_usage
           endScript 1
         fi
@@ -236,7 +197,7 @@ while [ -z "$commandGroup" ]; do
       parseGlobalFlags "$@"
       shiftCount="$?"
       if (( shiftCount <= 0 )); then
-        log $LOGERROR "Unknown argument: $1"
+        log $ERROR "Unknown argument: $1"
         print_usage
         endScript 1
       fi
@@ -248,6 +209,67 @@ while [ -z "$commandGroup" ]; do
 done
 
 
+#####################################################################
+# GNU GetOpt parsing                                                #
+#####################################################################
+
+# general purpos constants:
+declare -r RETURN_TRUE=0
+declare -r RETURN_FALSE=1
+
+
+getopt -T
+if [ "$?" -ne 4 ]; then
+    echo "Please ensure you have the GNU-Version of 'getopt' installed! exiting..." >&2
+    exit 1
+fi
+
+# initialize config variables:
+commandGroup=
+commandName=
+
+
+parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+vh" --longoptions "help,log:" -- "$@")"
+if [ $? -ne 0 ]; then
+  echo "Error while analyzing the script arguments" >&2
+  exit 2
+fi
+eval set -- "$parsedArgs"
+
+while (( "$#" > 0 )); do
+  case "$1" in
+    --help | -h)
+      print_usage
+      endScript
+      ;;
+    -v)
+      ((activeLogLevel++))
+      shift
+      ;;
+    --log)
+      if [ "${LOG_LEVEL_MAP[${2}]+abc}" ]; then
+        activeLogLevel="${LOG_LEVEL_MAP[${2}]}"
+        return 2
+      else
+        log $ERROR "Unknown loglevel: $2"
+        print_usage
+        endScript 1
+      fi
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Internal parsing error of scritp ${SCRIPT_NAME}."
+      exit 3
+      ;;
+  esac
+done
+
+
+log $INFO "current active log level: ${activeLogLevel}"
+return 0
 
 #####################################################################
 # Program Functions                                                 #
@@ -401,8 +423,6 @@ buildCmdVerify() {
 doSourceInstall
 doTargetInstall
 
-[ $printTrace -eq $RETURN_TRUE ] && set -o xtrace;
-
 if [ $DO_TRANSFER = $RETURN_TRUE ]; then
   echo "executing data transfer:"
 
@@ -453,6 +473,5 @@ else
   log $LOGINFO "SKIP: Verification of the information;  specify --verify trigger verification calculation"
 fi
 
-[ $printTrace -eq $RETURN_TRUE ] && set +o xtrace;
 printRunTime
 endScript
