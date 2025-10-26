@@ -202,8 +202,8 @@ log $INFO "active log level after inital flag parsing: ${activeLogLevel}"
 # Command-Group parsing
 # =====================
 
-if [ $# -lt 2 ]; then
-  log $ERROR "invalid number of arguments have been supplied: $#"
+if [ $# -lt 1 ]; then
+  log $ERROR "invalid number of arguments have been supplied: Please add the command group you intent to use."
   print_usage
   endScript 6
 fi
@@ -289,8 +289,8 @@ shift
 # Command Flags parsing
 # =====================
 
-if [ $# -lt 2 ]; then
-  log $ERROR "invalid number of arguments have been supplied: $#"
+if [ $# -lt 1 ]; then
+  log $ERROR "invalid number of arguments have been supplied: Please add the command you intend to use."
   print_usage
   endScript 6
 fi
