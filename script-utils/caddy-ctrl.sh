@@ -135,78 +135,78 @@ if [ $# -lt 1 ]; then
   endScript 1
 fi
 
-parseDockerFlags() {
-  while [ -z "$commandName" ]; do
-    shiftCount=1
-    case "${1,,}" in
-      h | help)
-        print_usage
-        endScript
-        ;;
-      logs)
-        commandName="logs"
-        ;;
-      start)
-        commandName="start"
-        ;;
-      stop)
-        commandName="stop"
-        ;;
-      restart)
-        commandName="restart"
-        ;;
-      update)
-        commandName="update"
-        ;;
-      *)
-        parseGlobalFlags "$@"
-        shiftCount="$?"
-        if (( shiftCount <= 0 )); then
-          log $ERROR "Unknown argument: $1"
-          print_usage
-          endScript 1
-        fi
-        ;;
-    esac
-    if (( 0 < shiftCount )); then
-      shift $shiftCount
-    else
-  done
-}
+# parseDockerFlags() {
+#   while [ -z "$commandName" ]; do
+#     shiftCount=1
+#     case "${1,,}" in
+#       h | help)
+#         print_usage
+#         endScript
+#         ;;
+#       logs)
+#         commandName="logs"
+#         ;;
+#       start)
+#         commandName="start"
+#         ;;
+#       stop)
+#         commandName="stop"
+#         ;;
+#       restart)
+#         commandName="restart"
+#         ;;
+#       update)
+#         commandName="update"
+#         ;;
+#       *)
+#         parseGlobalFlags "$@"
+#         shiftCount="$?"
+#         if (( shiftCount <= 0 )); then
+#           log $ERROR "Unknown argument: $1"
+#           print_usage
+#           endScript 1
+#         fi
+#         ;;
+#     esac
+#     if (( 0 < shiftCount )); then
+#       shift $shiftCount
+#     fi
+#   done
+# }
 
-while [ -z "$commandGroup" ]; do
-  shiftCount=1
-  case "${1,,}" in
-    h | help)
-      print_usage
-      endScript
-      ;;
-    d | docker)
-      commandGroup="docker"
-      parseDockerFlags "$@"
-      ;;
-    g | git)
-      commandGroup="git"
-      parseGitFlags "$@"
-      ;;
-    s | site)
-      commandGroup="site"
-      parseSiteFlags "$@"
-      ;;
-    *)
-      parseGlobalFlags "$@"
-      shiftCount="$?"
-      if (( shiftCount <= 0 )); then
-        log $ERROR "Unknown argument: $1"
-        print_usage
-        endScript 1
-      fi
-      ;;
-  esac
-  if (( 0 < shiftCount )); then
-    shift $shiftCount
-  else
-done
+# while [ -z "$commandGroup" ]; do
+#   shiftCount=1
+#   case "${1,,}" in
+#     h | help)
+#       print_usage
+#       endScript
+#       ;;
+#     d | docker)
+#       commandGroup="docker"
+#       parseDockerFlags "$@"
+#       ;;
+#     g | git)
+#       commandGroup="git"
+#       parseGitFlags "$@"
+#       ;;
+#     s | site)
+#       commandGroup="site"
+#       parseSiteFlags "$@"
+#       ;;
+#     *)
+#       parseGlobalFlags "$@"
+#       shiftCount="$?"
+#       if (( shiftCount <= 0 )); then
+#         log $ERROR "Unknown argument: $1"
+#         print_usage
+#         endScript 1
+#       fi
+#       ;;
+#   esac
+#   if (( 0 < shiftCount )); then
+#     shift $shiftCount
+#   fi
+# done
 
 
 #####################################################################
