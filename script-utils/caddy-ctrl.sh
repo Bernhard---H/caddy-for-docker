@@ -229,13 +229,15 @@ fi
 commandGroup=
 commandName=
 
+# Global Flags parsing
+# ====================
 
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+vh" --longoptions "help,log:" -- "$@")"
 if [ $? -ne 0 ]; then
   echo "Error while analyzing the script arguments" >&2
   exit 2
 fi
-log $ERROR "parsed arguments: ${parsedArgs}"
+log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
 while (( "$#" > 0 )); do
@@ -251,11 +253,11 @@ while (( "$#" > 0 )); do
     --log)
       if [ "${LOG_LEVEL_MAP[${2}]+abc}" ]; then
         activeLogLevel="${LOG_LEVEL_MAP[${2}]}"
-        return 2
+        shift 2
       else
         log $ERROR "Unknown loglevel: $2"
         print_usage
-        endScript 1
+        endScript 4
       fi
       ;;
     --)
@@ -269,8 +271,118 @@ while (( "$#" > 0 )); do
   esac
 done
 
+log $INFO "active log level after inital flag parsing: ${activeLogLevel}"
 
-log $INFO "current active log level: ${activeLogLevel}"
+# Command-Group parsing
+# =====================
+
+tryGroup="${1,,}"
+case "${tryGroup}" in
+  d | docker)
+    commandGroup="docker"
+    ;;
+  g | git)
+    commandGroup="git"
+    ;;
+  s | site)
+    commandGroup="site"
+    ;;
+  *)
+    log $ERROR "Unknown argument: $1"
+    print_usage
+    endScript 5
+    ;;
+esac
+shift
+
+
+# Command-Group Flags parsing
+# ===========================
+
+parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
+if [ $? -ne 0 ]; then
+  echo "Error while analyzing the script arguments" >&2
+  exit 2
+fi
+log $TRACE "parsed arguments: ${parsedArgs}"
+eval set -- "$parsedArgs"
+
+while (( "$#" > 0 )); do
+  case "$1" in
+    --help | -h)
+      print_usage
+      endScript
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Internal parsing error of scritp ${SCRIPT_NAME}."
+      exit 3
+      ;;
+  esac
+done
+
+# Command parsing
+# ===============
+
+tryCommand="${1,,}"
+case "${tryCommand}" in
+  l | logs)
+    commandName="logs"
+    ;;
+  s| status)
+    commandName="status"
+    ;;
+  start)
+    commandName="start"
+    ;;
+  stop)
+    commandName="stop"
+    ;;
+  r | restart)
+    commandName="restart"
+    ;;
+  update)
+    commandName="update"
+    ;;
+  *)
+    log $ERROR "Unknown argument: $1"
+    print_usage
+    endScript 5
+    ;;
+esac
+shift
+
+# Command Flags parsing
+# =====================
+
+parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
+if [ $? -ne 0 ]; then
+  echo "Error while analyzing the script arguments" >&2
+  exit 2
+fi
+log $TRACE "parsed arguments: ${parsedArgs}"
+eval set -- "$parsedArgs"
+
+while (( "$#" > 0 )); do
+  case "$1" in
+    --help | -h)
+      print_usage
+      endScript
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Internal parsing error of scritp ${SCRIPT_NAME}."
+      exit 3
+      ;;
+  esac
+done
+
 exit 0
 
 #####################################################################
