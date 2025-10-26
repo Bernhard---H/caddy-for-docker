@@ -219,7 +219,7 @@ declare -r RETURN_FALSE=1
 
 
 #getopt -T
-if [ 4 -ne getopt -T ]; then
+if [ 4 -ne (getopt -T) ]; then
     echo "Please ensure you have the GNU-Version of 'getopt' installed! exiting..." >&2
     exit 1
 fi
