@@ -235,6 +235,7 @@ if [ $? -ne 0 ]; then
   echo "Error while analyzing the script arguments" >&2
   exit 2
 fi
+
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
@@ -294,6 +295,7 @@ if [ $# -lt 1 ]; then
   print_usage
   endScript 6
 fi
+
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
   echo "Error while analyzing the script arguments" >&2
