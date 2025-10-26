@@ -135,80 +135,6 @@ if [ $# -lt 1 ]; then
   endScript 1
 fi
 
-# parseDockerFlags() {
-#   while [ -z "$commandName" ]; do
-#     shiftCount=1
-#     case "${1,,}" in
-#       h | help)
-#         print_usage
-#         endScript
-#         ;;
-#       logs)
-#         commandName="logs"
-#         ;;
-#       start)
-#         commandName="start"
-#         ;;
-#       stop)
-#         commandName="stop"
-#         ;;
-#       restart)
-#         commandName="restart"
-#         ;;
-#       update)
-#         commandName="update"
-#         ;;
-#       *)
-#         parseGlobalFlags "$@"
-#         shiftCount="$?"
-#         if (( shiftCount <= 0 )); then
-#           log $ERROR "Unknown argument: $1"
-#           print_usage
-#           endScript 1
-#         fi
-#         ;;
-#     esac
-#     if (( 0 < shiftCount )); then
-#       shift $shiftCount
-#     fi
-#   done
-# }
-
-# while [ -z "$commandGroup" ]; do
-#   shiftCount=1
-#   case "${1,,}" in
-#     h | help)
-#       print_usage
-#       endScript
-#       ;;
-#     d | docker)
-#       commandGroup="docker"
-#       parseDockerFlags "$@"
-#       ;;
-#     g | git)
-#       commandGroup="git"
-#       parseGitFlags "$@"
-#       ;;
-#     s | site)
-#       commandGroup="site"
-#       parseSiteFlags "$@"
-#       ;;
-#     *)
-#       parseGlobalFlags "$@"
-#       shiftCount="$?"
-#       if (( shiftCount <= 0 )); then
-#         log $ERROR "Unknown argument: $1"
-#         print_usage
-#         endScript 1
-#       fi
-#       ;;
-#   esac
-#   if (( 0 < shiftCount )); then
-#     shift $shiftCount
-#   fi
-# done
-
-
 #####################################################################
 # GNU GetOpt parsing                                                #
 #####################################################################
@@ -276,6 +202,11 @@ log $INFO "active log level after inital flag parsing: ${activeLogLevel}"
 # Command-Group parsing
 # =====================
 
+if [ $# -lt 2 ]; then
+  log $ERROR "invalid number of arguments have been supplied: $#"
+  print_usage
+  endScript 6
+fi
 tryGroup="${1,,}"
 case "${tryGroup}" in
   d | docker)
@@ -358,6 +289,11 @@ shift
 # Command Flags parsing
 # =====================
 
+if [ $# -lt 2 ]; then
+  log $ERROR "invalid number of arguments have been supplied: $#"
+  print_usage
+  endScript 6
+fi
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
   echo "Error while analyzing the script arguments" >&2
