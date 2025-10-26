@@ -235,6 +235,7 @@ if [ $? -ne 0 ]; then
   echo "Error while analyzing the script arguments" >&2
   exit 2
 fi
+log $ERROR "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
 while (( "$#" > 0 )); do
