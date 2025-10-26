@@ -269,7 +269,7 @@ done
 
 
 log $INFO "current active log level: ${activeLogLevel}"
-return 0
+exit 0
 
 #####################################################################
 # Program Functions                                                 #
