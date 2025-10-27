@@ -143,12 +143,11 @@ fi
 declare -r RETURN_TRUE=0
 declare -r RETURN_FALSE=1
 
-
 getOptTest=0;
 getopt -T || getOptTest="$?";
 if (( getOptTest != 4 )); then
-    echo "Please ensure you have the GNU-Version of 'getopt' installed! exiting..." >&2
-    exit 1
+    log $ERROR "Please ensure you have the GNU-Version of 'getopt' installed! exiting..."
+    endScript 1
 fi
 
 # initialize config variables:
@@ -160,8 +159,8 @@ commandName=
 
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+vh" --longoptions "help,log:" -- "$@")"
 if [ $? -ne 0 ]; then
-  echo "Error while analyzing the script arguments" >&2
-  exit 2
+  log $ERROR "Error while analyzing the script arguments."
+  endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
@@ -232,8 +231,9 @@ shift
 
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
-  echo "Error while analyzing the script arguments" >&2
-  exit 2
+  log $ERROR "Error while analyzing the script arguments"
+  print_usage "${commandGroup}"
+  endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
@@ -241,7 +241,7 @@ eval set -- "$parsedArgs"
 while (( "$#" > 0 )); do
   case "$1" in
     --help | -h)
-      print_usage
+      print_usage "${commandGroup}"
       endScript
       ;;
     --)
@@ -249,8 +249,9 @@ while (( "$#" > 0 )); do
       break
       ;;
     *)
-      echo "Internal parsing error of scritp ${SCRIPT_NAME}."
-      exit 3
+      log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
+      print_usage "${commandGroup}"
+      endScript 3
       ;;
   esac
 done
@@ -260,10 +261,9 @@ done
 
 if [ $# -lt 1 ]; then
   log $ERROR "invalid number of arguments have been supplied: Please add the command you intend to use."
-  print_usage
+  print_usage "${commandGroup}"
   endScript 6
 fi
-
 
 tryCommand="${1,,}"
 case "${tryCommand}" in
@@ -287,7 +287,7 @@ case "${tryCommand}" in
     ;;
   *)
     log $ERROR "Unknown argument: $1"
-    print_usage
+    print_usage "${commandGroup}"
     endScript 5
     ;;
 esac
@@ -298,8 +298,9 @@ shift
 
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
-  echo "Error while analyzing the script arguments" >&2
-  exit 2
+  log $ERROR "Error while analyzing the script arguments"
+  print_usage "${commandGroup}" "${commandName}"
+  endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
@@ -307,7 +308,7 @@ eval set -- "$parsedArgs"
 while (( "$#" > 0 )); do
   case "$1" in
     --help | -h)
-      print_usage
+      print_usage "${commandGroup}" "${commandName}"
       endScript
       ;;
     --)
@@ -315,8 +316,9 @@ while (( "$#" > 0 )); do
       break
       ;;
     *)
-      echo "Internal parsing error of scritp ${SCRIPT_NAME}."
-      exit 3
+      log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
+      print_usage "${commandGroup}" "${commandName}"
+      endScript 3
       ;;
   esac
 done
