@@ -160,6 +160,7 @@ commandName=
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+vh" --longoptions "help,log:" -- "$@")"
 if [ $? -ne 0 ]; then
   log $ERROR "Error while analyzing the script arguments."
+  print_usage
   endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
@@ -190,8 +191,9 @@ while (( "$#" > 0 )); do
       break
       ;;
     *)
-      echo "Internal parsing error of scritp ${SCRIPT_NAME}."
-      exit 3
+      log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
+      print_usage
+      endScript 3
       ;;
   esac
 done
@@ -224,7 +226,6 @@ case "${tryGroup}" in
     ;;
 esac
 shift
-
 
 # Command-Group Flags parsing
 # ===========================
