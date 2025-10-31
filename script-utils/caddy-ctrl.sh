@@ -36,10 +36,10 @@ Command-Groups:
 ===============
 ";
 
-  while IFS=$'\t' read -r cmdGroup _; do
+  while read -r cmdGroup; do
     echo "
   * ${cmdGroup}"
-  done < <(yq '.groups | keys | @TSV' "${SCRIPT_DIR}/ctrl-commands.yaml")
+  done < <(yq '.groups | keys | .[]' "${SCRIPT_DIR}/ctrl-commands.yaml")
 }
 
 print_usage() {
