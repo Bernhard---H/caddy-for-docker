@@ -31,13 +31,9 @@ SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 
 usage_yaml() {
-  echo "
-Command-Groups:
-===============
-";
-
   while read -r cmdGroup; do
-    echo "  * ${cmdGroup}"
+    echo "${cmdGroup}"
+    echo "${cmdGroup}" | tr '.' '='
   done < <(yq -c '.groups | keys | .[]' "${SCRIPT_DIR}/ctrl-commands.yaml")
 }
 
