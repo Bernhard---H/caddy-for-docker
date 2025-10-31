@@ -33,6 +33,10 @@ SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 usage_yaml() {
   local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
   
+  echo "
+Global Flags:
+=============
+"
   yq -r '[
     (
         .flags | .[] | label $item | 
@@ -49,7 +53,8 @@ usage_yaml() {
 sort_by(.[0]) | 
 # print as tab separated file
 .[] | @tsv' "$yaml" | \
-  column -t -s "\t" -m -n "Global Flags" -C name="Title",trunc -C name="Flags" -C name="Value-List",wrap -C name="Description",wrap,noextreme
+  column -t -s $'\t' -m -n "Global Flags" -C name="Title",trunc -C name="Flags" -C name="Value-List",wrap -C name="Description",wrap,noextreme
+  echo ""
 
   # display commandy grouped by command-group
   while read -r cmdGroup; do
