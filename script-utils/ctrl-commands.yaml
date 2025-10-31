@@ -11,7 +11,7 @@ flags:
     short:
       - v
     description: "increases logging level, may be used multiple times"
-  - title: log level
+  - title: log-level
     long:
       - log
     value:
