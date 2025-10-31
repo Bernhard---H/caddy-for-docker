@@ -32,8 +32,9 @@ SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 
 usage_yaml() {
   while read -r cmdGroup; do
-    echo "${cmdGroup}"
-    echo "${cmdGroup}" | tr '.' '='
+    echo " ${cmdGroup} "
+    echo "=${cmdGroup//./=}="
+    echo ""
   done < <(yq -c '.groups | keys | .[]' "${SCRIPT_DIR}/ctrl-commands.yaml")
 }
 
