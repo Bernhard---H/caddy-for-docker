@@ -27,13 +27,25 @@ trap 'errexit' ERR
 #  expansions and subshells
 set -o errtrace
 
-PROGPATH=`dirname $0`
+SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 SCRIPT_NAME="${0:-caddy-ctrl.sh}"
+
+usage_yaml() {
+  echo "
+Command-Groups:
+===============
+";
+
+  while IFS=$'\t' read -r cmdGroup _; do
+    echo "
+  * ${cmdGroup}"
+  done < <(yq '.groups | keys | @TSV' "${SCRIPT_DIR}/ctrl-commands.yaml")
+}
 
 print_usage() {
   echo "
 Usage: ${SCRIPT_NAME} --help
-Usage: ${SCRIPT_NAME} <COMMAND>
+Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 
 Description:
 ============
@@ -51,6 +63,7 @@ Commands:
 =========
 
   * d[ocker] logs [{-f|--follow}]
+  * d[ocker] status
   * d[ocker] start
   * d[ocker] stop
   * d[ocker] restart
@@ -69,7 +82,11 @@ Global Flags:
   --log {error|warn|info|debug|trace}
 
 "
+  usage_yaml
 }
+
+print_usage
+exit 0
 #################################################
 
 # from Syslog spec: https://www.rfc-editor.org/rfc/rfc5424#section-6.2.1

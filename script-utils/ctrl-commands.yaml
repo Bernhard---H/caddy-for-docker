@@ -1,0 +1,86 @@
+
+flags:
+  - &help
+    title: help
+    short:
+      - h
+    long:
+      - help
+    description: "display help text"
+  - title: verbose
+    short:
+      - v
+    description: "increases logging level, may be used multiple times"
+  - title: log level
+    long:
+      - log
+    value:
+      kind: VALUE_LIST
+      list:
+        - error
+        - warn
+        - info
+        - debug
+        - trace
+    description: "set the script log level"
+
+groups:
+  docker:
+    description: "controls the caddy docker container"
+
+    flags:
+      - *help
+
+    commands:
+      logs:
+        flags:
+          - *help
+          - title: follow
+            short:
+              - f
+            long:
+              - follow
+            description: "keep updating the view with the latest log entries"
+          - title: tail
+            short:
+              - t
+            long:
+              - tail
+            value:
+              kind: INTEGER
+              required: false
+            description: "only get the last {value} number of entries in the log"
+      status:
+      start:
+      stop:
+      restart:
+      update:
+        flags:
+          - *help
+          - title: force recreate
+            long:
+              - force
+            description: "forcefully recreates the caddy docker container"
+
+  ctrl:
+    description: "Manage the caddy template git repository (version) used locally."
+
+    flags:
+      - *help
+
+    commands:
+      setup:
+        description: "Run the initial, post-clone setup-script again."
+      update:
+        description: "update the caddy template git repository"
+      
+  site:
+    description: "Manage caddy site config files."
+
+    flags:
+      - *help
+
+    commands:
+      enable:
+      disable:
+      
