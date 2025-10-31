@@ -37,9 +37,8 @@ Command-Groups:
 ";
 
   while read -r cmdGroup; do
-    echo "
-  * ${cmdGroup}"
-  done < <(yq '.groups | keys | .[]' "${SCRIPT_DIR}/ctrl-commands.yaml")
+    echo "  * ${cmdGroup}"
+  done < <(yq -c '.groups | keys | .[]' "${SCRIPT_DIR}/ctrl-commands.yaml")
 }
 
 print_usage() {
