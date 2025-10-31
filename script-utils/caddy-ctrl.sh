@@ -48,7 +48,8 @@ usage_yaml() {
 # order by title
 sort_by(.[0]) | 
 # print as tab separated file
-.[] | @tsv' "$yaml" | column -t -s "\t" -C name="Title",trunc -C name="Flags" -C name="Value-List",wrap -C name="Description",wrap,noextreme
+.[] | @tsv' "$yaml" | \
+  column -t -s "\t" -m -n "Global Flags" -C name="Title",trunc -C name="Flags" -C name="Value-List",wrap -C name="Description",wrap,noextreme
 
   # display commandy grouped by command-group
   while read -r cmdGroup; do
