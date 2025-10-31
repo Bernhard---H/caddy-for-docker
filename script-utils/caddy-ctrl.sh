@@ -53,7 +53,7 @@ Global Flags:
 sort_by(.[0]) | 
 # print as tab separated file
 .[] | @tsv' "$yaml" | \
-  column -t -s $'\t' -n "Global Flags" -C name="Title",trunc -C name="Flags" -C name="Value-List",wrap -C name="Description",wrap,noextreme
+  column -t -s $'\t' -o " | " -n "Global Flags" -C name="Title",trunc -C name="Flags" -C name="Value-List",wrap -C name="Description",wrap,noextreme
   echo ""
 
   # display commandy grouped by command-group
