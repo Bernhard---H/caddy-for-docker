@@ -35,7 +35,7 @@ print_usage_flags_table() {
 
   echo ""
   echo "${tableName}:"
-  echo "$(echo "$cmdGroup" | sed 's/./-/g')-"
+  echo "$(echo "$tableName" | sed 's/./-/g')-"
   echo ""
 
   cat | jq -r '[
@@ -61,30 +61,7 @@ sort_by(.[0]) |
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
   
-  yq -o=json -I=0 '.' "$yaml" | print_usage_flags_table "Global Flags"
-
-  echo "
-Global Flags:
-=============
-"
-  yq -r '[
-    (
-        .flags | .[] | label $item | 
-        # index in array is column in result-table
-        [ 
-            .title // "",
-            ([ if has("short") then "-\(.short | .[])" else empty end ] + [ if has("long") then "--\(.long | .[])" else empty end ] | if isempty(.[]) then break $item end | join("|") ),
-            ( .value | select(.kind == "VALUE_LIST")? | .list | join("|") | "{\(.)}" ) // "",
-            .description // break $item
-        ]
-    )
-] | 
-# order by title
-sort_by(.[0]) | 
-# print as tab separated file
-.[] | @tsv' "$yaml" | \
-  column -t -s $'\t' -o " | " -n "Global Flags" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
-  echo ""
+  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
 
   # display commandy grouped by command-group
   while read -r cmdGroup; do
