@@ -64,10 +64,11 @@ print_usage_yaml() {
 
   # display commandy grouped by command-group
   while read -r cmdGroup; do
+    local title="Group: ${cmdGroup''}"
     echo ""
     echo ""
-    echo " ${cmdGroup} "
-    echo "=$(echo "$cmdGroup" | sed 's/./=/g')="
+    echo " ${title} "
+    echo "=$(echo "$title" | sed 's/./=/g')="
     echo ""
 
     yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$cmdGroup Flags"
