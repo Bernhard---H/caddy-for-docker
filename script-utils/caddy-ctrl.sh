@@ -87,7 +87,7 @@ print_usage_yaml() {
       echo " ${cTitle} "
       echo "=$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
-      echo "command: ${cmdGroup}/${cmd}"
+      echo "command: ${cmdGroup} ${cmd}"
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
