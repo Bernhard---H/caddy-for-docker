@@ -33,8 +33,8 @@ SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 print_usage_flags_table() {
   local tableName="$1"
 
-  echo "${tableName}:"
-  echo "$(echo "$tableName" | sed 's/./-/g')-"
+  echo " ${tableName} "
+  echo "-$(echo "$tableName" | sed 's/./-/g')-"
   echo ""
 
   cat | jq -r '[
@@ -71,7 +71,7 @@ print_usage_yaml() {
     echo "=$(echo "$title" | sed 's/./=/g')="
     echo ""
 
-    yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$cmdGroup Flags"
+    yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$title Flags"
 
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
