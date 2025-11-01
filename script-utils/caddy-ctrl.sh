@@ -30,6 +30,10 @@ set -o errtrace
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 
+indent() {
+  sed 's/^/  /';
+}
+
 print_usage_flags_table() {
   local tableName="$1"
 
@@ -53,14 +57,13 @@ print_usage_flags_table() {
 sort_by(.[0]) | 
 # print as tab separated file
 .[] | @tsv' | \
-  column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme | \
-  sed 's/^/  /'
+  column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme 
 }
 
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
   
-  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
+  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags" | indent
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -72,22 +75,23 @@ print_usage_yaml() {
     echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
-    echo "$gJson" | print_usage_flags_table "$gTitle flags"
+    echo "$gJson" | print_usage_flags_table "$gTitle flags"  | indent
 
-
+    {
     while read -r cmd; do
       local cTitle="${cmdGroup^^}/${cmd^^}"
       echo ""
       echo ""
-      echo "   ${cTitle} "
-      echo "===$(echo "$cTitle" | sed 's/./=/g')="
+      echo " ${cTitle} "
+      echo "=$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
-      echo "$cJson" | print_usage_flags_table "$cTitle flags"
+      echo "$cJson" | print_usage_flags_table "$cTitle flags" | indent
 
 
     done < <(echo "$gJson" | jq -r '.["commands"] | keys | .[]')
+    } | indent
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
   echo ""
