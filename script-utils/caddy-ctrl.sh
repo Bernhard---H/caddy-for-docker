@@ -62,17 +62,32 @@ print_usage_yaml() {
   
   yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
 
-  # display commandy grouped by command-group
+  # display command grouped by command-group
   while read -r cmdGroup; do
-    local title="group ${cmdGroup^^}"
+    local gTitle="group ${cmdGroup^^}"
     echo ""
     echo ""
-    echo " ${title} "
-    echo "=$(echo "$title" | sed 's/./=/g')="
+    echo " ${gTitle} "
+    echo "=$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
 
-    yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$title flags"
+    gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
+    echo "$gJson" | print_usage_flags_table "$gTitle flags"
 
+
+    while read -r cmd; do
+      local cTitle="command ${cmd^^}"
+      echo ""
+      echo ""
+      echo " ${cTitle} "
+      echo "=$(echo "$cTitle" | sed 's/./=/g')="
+      echo ""
+
+      cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
+      echo "$cJson" | print_usage_flags_table "$cTitle flags"
+
+
+    done < <(echo "$gJson" | jq -r '.["commands"] | keys | .[]')
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
   echo ""
