@@ -64,7 +64,7 @@ print_usage_yaml() {
 
   # display command grouped by command-group
   while read -r cmdGroup; do
-    local gTitle="group ${cmdGroup^^}"
+    local gTitle="${cmdGroup^^}"
     echo ""
     echo ""
     echo " ${gTitle} "
@@ -76,11 +76,11 @@ print_usage_yaml() {
 
 
     while read -r cmd; do
-      local cTitle="command ${cmd^^}"
+      local cTitle="${cmdGroup^^}/${cmd^^}"
       echo ""
       echo ""
-      echo " ${cTitle} "
-      echo "=$(echo "$cTitle" | sed 's/./=/g')="
+      echo "   ${cTitle} "
+      echo "===$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
