@@ -70,7 +70,7 @@ print_usage_yaml() {
     echo "=$(echo "$cmdGroup" | sed 's/./=/g')="
     echo ""
 
-    yq -j --arg cmdGroup "$cmdGroup" '.groups | [$cmdGroup]' "$yaml" | print_usage_flags_table "$cmdGroup Flags"
+    yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$cmdGroup Flags"
 
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
