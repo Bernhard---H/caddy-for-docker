@@ -33,7 +33,6 @@ SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 print_usage_flags_table() {
   local tableName="$1"
 
-  echo ""
   echo "${tableName}:"
   echo "$(echo "$tableName" | sed 's/./-/g')-"
   echo ""
@@ -54,14 +53,15 @@ print_usage_flags_table() {
 sort_by(.[0]) | 
 # print as tab separated file
 .[] | @tsv' | \
-  column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
-  echo ""
+  column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme | \
+  sed 's/^/  /'
 }
 
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
   
   yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
+  echo ""
   echo ""
 
   # display commandy grouped by command-group
