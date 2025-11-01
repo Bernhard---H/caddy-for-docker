@@ -30,9 +30,39 @@ set -o errtrace
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 
-usage_yaml() {
+print_usage_flags_table() {
+  local tableName="$1"
+
+  echo ""
+  echo "${tableName}:"
+  echo "$(echo "$cmdGroup" | sed 's/./-/g')-"
+  echo ""
+
+  cat | jq -r '[
+    (
+        .flags | .[] | label $item | 
+        # index in array is column in result-table
+        [ 
+            .title // "",
+            ([ if has("short") then "-\(.short | .[])" else empty end ] + [ if has("long") then "--\(.long | .[])" else empty end ] | if isempty(.[]) then break $item end | join("|") ),
+            ( .value | select(.kind == "VALUE_LIST")? | .list | join("|") | "{\(.)}" ) // "",
+            .description // break $item
+        ]
+    )
+] | 
+# order by title
+sort_by(.[0]) | 
+# print as tab separated file
+.[] | @tsv' | \
+  column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
+  echo ""
+}
+
+print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
   
+  yq -o=json -I=0 '.' "$yaml" | print_usage_flags_table "Global Flags"
+
   echo "
 Global Flags:
 =============
@@ -61,6 +91,9 @@ sort_by(.[0]) |
     echo " ${cmdGroup} "
     echo "=$(echo "$cmdGroup" | sed 's/./=/g')="
     echo ""
+
+
+
   done < <(yq -r '.groups | keys | .[]' "$yaml")
 }
 
@@ -96,15 +129,9 @@ Commands:
   * s[ite] enable <filename>
   * s[ite] disable <filename>
 
-Global Flags:
-=============
-
-  -h | --help
-  -v                  may be used mulitple times for increased logging volume
-  --log {error|warn|info|debug|trace}
 
 "
-  usage_yaml
+  print_usage_yaml
 }
 
 print_usage
