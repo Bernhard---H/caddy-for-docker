@@ -64,7 +64,7 @@ print_usage_yaml() {
 
   # display commandy grouped by command-group
   while read -r cmdGroup; do
-    local title="Group: ${cmdGroup''}"
+    local title="Group: ${cmdGroup^^}"
     echo ""
     echo ""
     echo " ${title} "
