@@ -73,6 +73,8 @@ print_usage_yaml() {
     echo " ${gTitle} "
     echo "=$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
+    echo " command group: ${cmdGroup}"
+    echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
     echo "$gJson" | print_usage_flags_table "$gTitle flags"  | indent
@@ -84,6 +86,8 @@ print_usage_yaml() {
       echo ""
       echo " ${cTitle} "
       echo "=$(echo "$cTitle" | sed 's/./=/g')="
+      echo ""
+      echo " command: ${cmdGroup}/${cmd}"
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
