@@ -61,11 +61,11 @@ print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
   
   yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
-  echo ""
-  echo ""
 
   # display commandy grouped by command-group
   while read -r cmdGroup; do
+    echo ""
+    echo ""
     echo " ${cmdGroup} "
     echo "=$(echo "$cmdGroup" | sed 's/./=/g')="
     echo ""
@@ -74,6 +74,7 @@ print_usage_yaml() {
 
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
+  echo ""
 }
 
 print_usage() {
