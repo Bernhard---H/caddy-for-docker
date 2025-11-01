@@ -39,7 +39,7 @@ print_usage_flags_table() {
 
   cat | jq -r '[
     (
-        .flags | .[] | label $item | 
+        .flags | .[]? | label $item | 
         # index in array is column in result-table
         [ 
             .title // "",
@@ -71,7 +71,7 @@ print_usage_yaml() {
     echo "=$(echo "$title" | sed 's/./=/g')="
     echo ""
 
-    yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$title flags"
+    yq -j --arg cmdGroup "a$cmdGroup" '.groups | .[$cmdGroup]' "$yaml" | print_usage_flags_table "$title flags"
 
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
