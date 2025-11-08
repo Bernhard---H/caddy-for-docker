@@ -63,7 +63,7 @@ sort_by(.[0]) |
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/commands.yaml"
   
-  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags" | indent
+  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -73,13 +73,12 @@ print_usage_yaml() {
     echo " ${gTitle} "
     echo "=$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
-    echo "command group: ${cmdGroup}"
+    echo "command group: ${cmdGroup}" | indent
     echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
     echo "$gJson" | print_usage_flags_table "$gTitle flags" | indent
 
-    {
     while read -r cmd; do
       local cTitle="${cmdGroup} ${cmd}"
       echo ""
@@ -87,7 +86,7 @@ print_usage_yaml() {
       echo " ${cTitle} "
       echo "=$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
-      echo "command: ${cmdGroup} ${cmd}"
+      echo "command: ${cmdGroup} ${cmd}" | indent
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
@@ -95,7 +94,6 @@ print_usage_yaml() {
 
 
     done < <(echo "$gJson" | jq -r '.["commands"] | keys | .[]')
-    }
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
   echo ""
@@ -106,11 +104,10 @@ print_usage() {
 Usage: ${SCRIPT_NAME} --help
 Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 
-Description:
-============
+ Description 
+=============
 
   CLI tool for controlling the caddy container.
-
 
 "
   print_usage_yaml
