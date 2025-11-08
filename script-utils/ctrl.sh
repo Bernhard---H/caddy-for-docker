@@ -57,14 +57,13 @@ print_usage_flags_table() {
 sort_by(.[0]) | 
 # print as tab separated file
 .[] | @tsv' \
-  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme \
-  | indent
+  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
 }
 
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/commands.yaml"
   
-  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
+  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags" | indent
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -78,7 +77,7 @@ print_usage_yaml() {
     echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
-    echo "$gJson" | print_usage_flags_table "$gTitle flags"
+    echo "$gJson" | print_usage_flags_table "$gTitle flags" | indent
 
     {
     while read -r cmd; do
@@ -92,11 +91,11 @@ print_usage_yaml() {
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
-      echo "$cJson" | print_usage_flags_table "$cTitle flags"
+      echo "$cJson" | print_usage_flags_table "${cmdGroup^^} ${cmd^^} flags" | indent
 
 
     done < <(echo "$gJson" | jq -r '.["commands"] | keys | .[]')
-    } | indent
+    }
 
   done < <(yq -r '.groups | keys | .[]' "$yaml")
   echo ""
