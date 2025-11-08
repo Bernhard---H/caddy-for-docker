@@ -61,7 +61,7 @@ sort_by(.[0]) |
 }
 
 print_usage_yaml() {
-  local yaml="${SCRIPT_DIR}/ctrl-commands.yaml"
+  local yaml="${SCRIPT_DIR}/commands.yaml"
   
   yq -j '.' "$yaml" | print_usage_flags_table "Global Flags" | indent
 
