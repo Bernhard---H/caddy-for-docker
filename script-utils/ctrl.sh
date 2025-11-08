@@ -63,7 +63,7 @@ sort_by(.[0]) |
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/commands.yaml"
   
-  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags" | indent
+  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -81,7 +81,7 @@ print_usage_yaml() {
 
     {
     while read -r cmd; do
-      local cTitle="${cmdGroup^^}/${cmd^^}"
+      local cTitle="${cmdGroup} ${cmd}"
       echo ""
       echo ""
       echo " ${cTitle} "
@@ -110,28 +110,6 @@ Description:
 ============
 
   CLI tool for controlling the caddy container.
-
-Command-Groups:
-===============
-
-  * docker
-  * git
-  * site
-
-Commands:
-=========
-
-  * d[ocker] logs [{-f|--follow}]
-  * d[ocker] status
-  * d[ocker] start
-  * d[ocker] stop
-  * d[ocker] restart
-  * d[ocker] update
-
-  * g[it] update
-
-  * s[ite] enable <filename>
-  * s[ite] disable <filename>
 
 
 "
