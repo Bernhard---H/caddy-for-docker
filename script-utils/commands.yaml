@@ -51,9 +51,17 @@ groups:
               required: false
             description: "only get the last {value} number of entries in the log"
       status:
+        flags:
+          - *help
       start:
+        flags:
+          - *help
       stop:
+        flags:
+          - *help
       restart:
+        flags:
+          - *help
       update:
         flags:
           - *help
@@ -71,8 +79,12 @@ groups:
     commands:
       setup:
         description: "Run the initial, post-clone setup-script again."
+        flags:
+          - *help
       update:
         description: "update the caddy template git repository"
+        flags:
+          - *help
       
   site:
     description: "Manage caddy site config files."
@@ -82,5 +94,9 @@ groups:
 
     commands:
       enable:
+        flags:
+          - *help
       disable:
+        flags:
+          - *help
       
