@@ -56,8 +56,9 @@ print_usage_flags_table() {
 # order by title
 sort_by(.[0]) | 
 # print as tab separated file
-.[] | @tsv' | \
-  column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme 
+.[] | @tsv' \
+  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme \
+  | indent
 }
 
 print_usage_yaml() {
@@ -77,7 +78,7 @@ print_usage_yaml() {
     echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
-    echo "$gJson" | print_usage_flags_table "$gTitle flags"  | indent
+    echo "$gJson" | print_usage_flags_table "$gTitle flags"
 
     {
     while read -r cmd; do
@@ -91,7 +92,7 @@ print_usage_yaml() {
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
-      echo "$cJson" | print_usage_flags_table "$cTitle flags" | indent
+      echo "$cJson" | print_usage_flags_table "$cTitle flags"
 
 
     done < <(echo "$gJson" | jq -r '.["commands"] | keys | .[]')
