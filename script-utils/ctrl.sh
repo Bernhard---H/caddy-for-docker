@@ -70,8 +70,8 @@ print_usage_yaml() {
     local gTitle="${cmdGroup^^}"
     echo ""
     echo ""
-    echo " ${gTitle} "
-    echo "=$(echo "$gTitle" | sed 's/./=/g')="
+    echo "# ${gTitle} "
+    echo "==$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
     echo "command group: ${cmdGroup}" | indent
     echo ""
@@ -83,8 +83,8 @@ print_usage_yaml() {
       local cTitle="${cmdGroup} ${cmd}"
       echo ""
       echo ""
-      echo " ${cTitle} "
-      echo "=$(echo "$cTitle" | sed 's/./=/g')="
+      echo "## ${cTitle} "
+      echo "===$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
       echo "command: ${cmdGroup} ${cmd}" | indent
       echo ""
@@ -108,6 +108,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 =============
 
   CLI tool for controlling the caddy container.
+
 
 "
   print_usage_yaml
