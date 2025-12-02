@@ -11,7 +11,7 @@ if [ ! -f "${REPO_DIR}/.git/config" ]; then
     echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
 fi
-if ! grep -q "Bernhard---H/caddy-config.git" "${REPO_DIR}/.git/config"; then
+if ! grep -q "Bernhard---H/caddy-for-docker.git" "${REPO_DIR}/.git/config"; then
     echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
 fi
