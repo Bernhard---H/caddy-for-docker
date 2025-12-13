@@ -44,7 +44,7 @@ print_usage_args_table() {
   echo ""
 
   # read JSON from stdin of function
-  jq -r '[
+  argsTable="$(jq -r '[
     (
         .arguments | .[]? | label $item | 
         # index in array is column in result-table
@@ -56,12 +56,16 @@ print_usage_args_table() {
             .description // break $item
         ]
     )
-] | 
-# order by title
-sort_by(.[0]) | 
-# print as tab separated file
-.[] | @tsv' \
-  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" -C name="DESCRIPTION",wrap
+  ] | 
+  # order by title
+  sort_by(.[0]) | 
+  # print as tab separated file
+  .[] | @tsv')"
+  
+  argsFound="$(wc -l <<<"$argsTable")"
+  if (( argsFound > 0 )) then
+    column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" -C name="DESCRIPTION",wrap
+  fi
 }
 
 print_usage_flags_table() {
@@ -83,11 +87,11 @@ print_usage_flags_table() {
             .description // break $item
         ]
     )
-] | 
-# order by title
-sort_by(.[0]) | 
-# print as tab separated file
-.[] | @tsv' \
+  ] | 
+  # order by title
+  sort_by(.[0]) | 
+  # print as tab separated file
+  .[] | @tsv' \
   | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
 }
 
