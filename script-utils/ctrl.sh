@@ -39,12 +39,8 @@ indent() {
 print_usage_args_table() {
   local tableName="$1"
 
-  echo "${tableName}"
-  echo "$(echo "$tableName" | sed 's/./-/g')"
-  echo ""
-
   # read JSON from stdin of function
-  argsTable="$(jq -r '[
+  local argsTable="$(jq -r '[
     (
         .arguments | .[]? | label $item | 
         # index in array is column in result-table
@@ -62,9 +58,12 @@ print_usage_args_table() {
   # print as tab separated file
   .[] | @tsv')"
   
-  argsLen="${#argsTable}"
-  echo "strlen: $argsLen"
-  if (( argsLen > 0 )) then
+  local argsLen="${#argsTable}"
+  if (( argsLen > 1 )) then
+
+    echo "${tableName}"
+    echo "$(echo "$tableName" | sed 's/./-/g')"
+    echo ""
     column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc \
         -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
         -C name="DESCRIPTION",wrap <<<"$argsTable"
