@@ -44,7 +44,7 @@ print_usage_args_table() {
   echo ""
 
   # read JSON from stdin of function
-  argsTable="$(cat | jq -r '[
+  argsTable="$(jq -r '[
     (
         .arguments | .[]? | label $item | 
         # index in array is column in result-table
@@ -64,7 +64,9 @@ print_usage_args_table() {
   
   argsFound="$(wc -l <<<"$argsTable")"
   if (( argsFound > 0 )) then
-    column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" -C name="DESCRIPTION",wrap
+    column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc \
+        -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
+        -C name="DESCRIPTION",wrap <<<"$argsTable"
   else
     echo "... no positional arguments"
   fi
