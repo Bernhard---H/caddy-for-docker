@@ -67,8 +67,7 @@ print_usage_args_table() {
     column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc \
         -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
         -C name="DESCRIPTION",wrap <<<"$argsTable"
-  else
-    echo "... no positional arguments"
+
   fi
 }
 
