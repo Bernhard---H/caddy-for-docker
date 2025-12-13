@@ -94,11 +94,9 @@ groups:
 
     commands:
       enable:
-        flags:
-          - *help
-      disable:
         arguments:
-          - title: caddy config file
+          - &caddySiteFile
+            title: caddy config file
             required: true
             value:
               kind: FILE_PATH
@@ -106,6 +104,11 @@ groups:
                 - "{CADDY_LOCAL_CONFIG_DIR}"
                 - "enabled"
             description: "name of the site/config file to disable"
+        flags:
+          - *help
+      disable:
+        arguments:
+          - *caddySiteFile
         flags:
           - *help
       
