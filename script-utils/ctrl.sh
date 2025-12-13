@@ -73,14 +73,14 @@ print_usage_yaml() {
     echo "# ${gTitle} "
     #echo "==$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
-    echo "command group: ${cmdGroup}" | indent
+    echo "CLI style: ${cmdGroup}" | indent
     echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
     echo "$gJson" | print_usage_flags_table "$gTitle flags" | indent
 
     while read -r cmd; do
-      local cTitle="${cmdGroup} ${cmd}"
+      local cTitle="${cmdGroup^^} ${cmd}"
       echo ""
       echo ""
       echo "## ${cTitle} "
