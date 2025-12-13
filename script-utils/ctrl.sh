@@ -64,6 +64,7 @@ print_usage_args_table() {
   
   argsFound="$(wc -l <<<"$argsTable")"
   if (( argsFound > 0 )) then
+    echo "hi: $argsFound"
     column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc \
         -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
         -C name="DESCRIPTION",wrap <<<"$argsTable"
