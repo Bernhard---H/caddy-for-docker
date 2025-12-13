@@ -35,6 +35,35 @@ indent() {
   sed 's/^/  /';
 }
 
+
+print_usage_args_table() {
+  local tableName="$1"
+
+  echo "${tableName}"
+  echo "$(echo "$tableName" | sed 's/./-/g')"
+  echo ""
+
+  # read JSON from stdin of function
+  jq -r '[
+    (
+        .arguments | .[]? | label $item | 
+        # index in array is column in result-table
+        [ 
+            .title // "",
+            .required // "true",
+            .allowMulti // "false",
+            ( .value | select(.kind == "FILE_PATH")? | .searchPath | join("/") | "/\(.)" ) // "",
+            .description // break $item
+        ]
+    )
+] | 
+# order by title
+sort_by(.[0]) | 
+# print as tab separated file
+.[] | @tsv' \
+  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
+}
+
 print_usage_flags_table() {
   local tableName="$1"
 
@@ -78,11 +107,11 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 "
   local json="$(yq -j '.' "$yamlFile")"
   print_usage_flags_table "Global Flags" <<<"$json"
+  echo ""
 
   # display command grouped by command-group
   while read -r cmdGroup; do
     local gTitle="${cmdGroup^^}"
-    echo ""
     echo ""
     echo "# ${gTitle} "
     echo ""
@@ -90,11 +119,13 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
     echo ""
 
     local gJson="$(jq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' <<<"$json")"
+    echo "$gJson" | print_usage_args_table "Pos-Args: ${gTitle}" | indent
+    echo ""
     echo "$gJson" | print_usage_flags_table "Flags: ${gTitle}" | indent
+    echo ""
 
     while read -r cmd; do
       local cTitle="${cmdGroup^^} ${cmd}"
-      echo ""
       echo ""
       echo "## ${cTitle} "
       echo ""
@@ -102,13 +133,13 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
       echo ""
 
       local cJson="$(jq --arg cmd "$cmd" '.["commands"] | .[$cmd]' <<<"$gJson")"
+      echo "$cJson" | print_usage_args_table "Pos-Args: ${cTitle}" | indent
+      echo ""
       echo "$cJson" | print_usage_flags_table "Flags: ${cTitle}" | indent
-
+      echo ""
 
     done < <(jq -r '.["commands"] | keys | .[]' <<<"$gJson")
-
   done < <(jq -r '.groups | keys | .[]' <<<"$json")
-  echo ""
 }
 
 print_usage
