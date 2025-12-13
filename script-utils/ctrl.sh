@@ -76,28 +76,36 @@ print_usage_args_table() {
 print_usage_flags_table() {
   local tableName="$1"
 
-  echo "${tableName}"
-  echo "$(echo "$tableName" | sed 's/./-/g')"
-  echo ""
-
   # read JSON from stdin of function
-  cat | jq -r '[
-    (
-        .flags | .[]? | label $item | 
-        # index in array is column in result-table
-        [ 
-            .title // "",
-            ([ if has("short") then "-\(.short | .[])" else empty end ] + [ if has("long") then "--\(.long | .[])" else empty end ] | if isempty(.[]) then break $item end | join("|") ),
-            ( .value | select(.kind == "VALUE_LIST")? | .list | join("|") | "{\(.)}" ) // "",
-            .description // break $item
-        ]
-    )
-  ] | 
-  # order by title
-  sort_by(.[0]) | 
-  # print as tab separated file
-  .[] | @tsv' \
-  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
+  local flagsTable="$(
+    jq -r '[
+        (
+            .flags | .[]? | label $item | 
+            # index in array is column in result-table
+            [ 
+                .title // "",
+                ([ if has("short") then "-\(.short | .[])" else empty end ] + [ if has("long") then "--\(.long | .[])" else empty end ] | if isempty(.[]) then break $item end | join("|") ),
+                ( .value | select(.kind == "VALUE_LIST")? | .list | join("|") | "{\(.)}" ) // "",
+                .description // break $item
+            ]
+        )
+      ] | 
+      # order by title
+      sort_by(.[0]) | 
+      # print as tab separated file
+      .[] | @tsv'
+  )"
+
+  local flagsLen="${#flagsTable}"
+  if (( flagsLen > 1 )) then
+
+    echo "${tableName}"
+    echo "$(echo "$tableName" | sed 's/./-/g')"
+    echo ""
+    column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" \
+        -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme <<<"$flagsTable"
+    echo ""
+  fi
 }
 
 print_usage() {
