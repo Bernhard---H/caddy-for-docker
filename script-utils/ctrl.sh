@@ -62,6 +62,7 @@ sort_by(.[0]) |
 
 print_usage_yaml() {
   local yaml="${SCRIPT_DIR}/commands.yaml"
+  local prompt="$(hostname):${SCRIPT_DIR}\$ ${SCRIPT_NAME}"
   
   yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
 
@@ -73,7 +74,7 @@ print_usage_yaml() {
     echo "# ${gTitle} "
     #echo "==$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
-    echo "in CLI: ${cmdGroup}" | indent
+    echo "${prompt} ${cmdGroup}" | indent
     echo ""
 
     gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
@@ -86,7 +87,7 @@ print_usage_yaml() {
       echo "## ${cTitle} "
       #echo "===$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
-      echo "in CLI: ${cmdGroup} ${cmd}" | indent
+      echo "${prompt} ${cmdGroup} ${cmd}" | indent
       echo ""
 
       cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
