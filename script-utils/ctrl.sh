@@ -124,7 +124,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
     echo ""
     echo "# ${gTitle} "
     echo ""
-    echo "${prompt} ${cmdGroup}" #| indent
+    echo "${prompt} ${cmdGroup}" | indent
     echo ""
 
     local gJson="$(jq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' <<<"$json")"
@@ -136,7 +136,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
       echo ""
       echo "## ${cTitle} "
       echo ""
-      echo "${prompt} ${cmdGroup} ${cmd}" #| indent
+      echo "${prompt} ${cmdGroup} ${cmd}" | indent
       echo ""
 
       local cJson="$(jq --arg cmd "$cmd" '.["commands"] | .[$cmd]' <<<"$gJson")"
