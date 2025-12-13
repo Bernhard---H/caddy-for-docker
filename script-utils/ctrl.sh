@@ -42,6 +42,7 @@ print_usage_flags_table() {
   echo "$(echo "$tableName" | sed 's/./-/g')"
   echo ""
 
+  # read JSON from stdin of function
   cat | jq -r '[
     (
         .flags | .[]? | label $item | 
@@ -62,7 +63,7 @@ sort_by(.[0]) |
 }
 
 print_usage() {
-  local yaml="${SCRIPT_DIR}/commands.yaml"
+  local yamlFile="${SCRIPT_DIR}/commands.yaml"
   local prompt="root@$(hostname):${LOCAL_CONF_DIR}\$ ${SCRIPT_NAME}"
 
   echo "
@@ -75,8 +76,8 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
   CLI tool for controlling the caddy container.
 
 "
-
-  yq -j '.' "$yaml" | print_usage_flags_table "Global Flags"
+  local json="$(yq -j '.' "$yamlFile")"
+  print_usage_flags_table "Global Flags" <<<"$json"
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -84,12 +85,11 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
     echo ""
     echo ""
     echo "# ${gTitle} "
-    #echo "==$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
-    echo "${prompt} ${cmdGroup}" | indent
+    echo "${prompt} ${cmdGroup}" #| indent
     echo ""
 
-    gJson="$(yq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' "$yaml")"
+    local gJson="$(jq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' <<<"$json")"
     echo "$gJson" | print_usage_flags_table "Flags: ${gTitle}" | indent
 
     while read -r cmd; do
@@ -97,18 +97,17 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
       echo ""
       echo ""
       echo "## ${cTitle} "
-      #echo "===$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
-      echo "${prompt} ${cmdGroup} ${cmd}" | indent
+      echo "${prompt} ${cmdGroup} ${cmd}" #| indent
       echo ""
 
-      cJson="$(echo "$gJson" | jq --arg cmd "$cmd" '.["commands"] | .[$cmd]')"
+      local cJson="$(jq --arg cmd "$cmd" '.["commands"] | .[$cmd]' <<<"$gJson")"
       echo "$cJson" | print_usage_flags_table "Flags: ${cTitle}" | indent
 
 
-    done < <(echo "$gJson" | jq -r '.["commands"] | keys | .[]')
+    done < <(jq -r '.["commands"] | keys | .[]' <<<"$gJson")
 
-  done < <(yq -r '.groups | keys | .[]' "$yaml")
+  done < <(jq -r '.groups | keys | .[]' <<<"$json")
   echo ""
 }
 
