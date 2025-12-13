@@ -61,7 +61,7 @@ print_usage_args_table() {
 sort_by(.[0]) | 
 # print as tab separated file
 .[] | @tsv' \
-  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme
+  | column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" -C name="DESCRIPTION",wrap,noextreme
 }
 
 print_usage_flags_table() {
