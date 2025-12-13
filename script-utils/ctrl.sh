@@ -40,23 +40,25 @@ print_usage_args_table() {
   local tableName="$1"
 
   # read JSON from stdin of function
-  local argsTable="$(jq -r '[
-    (
-        .arguments | .[]? | label $item | 
-        # index in array is column in result-table
-        [ 
-            .title // "",
-            .required // "true",
-            .allowMulti // "false",
-            ( .value | select(.kind == "FILE_PATH")? | .searchPath | join("/") | "/\(.)" ) // "",
-            .description // break $item
-        ]
-    )
-  ] | 
-  # order by title
-  sort_by(.[0]) | 
-  # print as tab separated file
-  .[] | @tsv')"
+  local argsTable="$(
+  jq -r '[
+      (
+          .arguments | .[]? | label $item | 
+          # index in array is column in result-table
+          [ 
+              .title // "",
+              .required // "true",
+              .allowMulti // "false",
+              ( .value | select(.kind == "FILE_PATH")? | .searchPath | join("/") | "/\(.)" ) // "",
+              .description // break $item
+          ]
+      )
+    ] | 
+    # order by title
+    sort_by(.[0]) | 
+    # print as tab separated file
+    .[] | @tsv'
+  )"
   
   local argsLen="${#argsTable}"
   if (( argsLen > 1 )) then
@@ -67,7 +69,7 @@ print_usage_args_table() {
     column -t -s $'\t' -o " | " -n "${tableName}" -C name="TITLE",trunc \
         -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
         -C name="DESCRIPTION",wrap <<<"$argsTable"
-
+    echo ""
   fi
 }
 
@@ -127,9 +129,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 
     local gJson="$(jq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' <<<"$json")"
     echo "$gJson" | print_usage_args_table "Pos-Args: ${gTitle}" | indent
-    echo ""
     echo "$gJson" | print_usage_flags_table "Flags: ${gTitle}" | indent
-    echo ""
 
     while read -r cmd; do
       local cTitle="${cmdGroup^^} ${cmd}"
@@ -141,9 +141,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 
       local cJson="$(jq --arg cmd "$cmd" '.["commands"] | .[$cmd]' <<<"$gJson")"
       echo "$cJson" | print_usage_args_table "Pos-Args: ${cTitle}" | indent
-      echo ""
       echo "$cJson" | print_usage_flags_table "Flags: ${cTitle}" | indent
-      echo ""
 
     done < <(jq -r '.["commands"] | keys | .[]' <<<"$gJson")
   done < <(jq -r '.groups | keys | .[]' <<<"$json")
