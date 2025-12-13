@@ -8,7 +8,7 @@ The cloning-target may NOT be named `caddy`.
 Next to the folder containing this repository, there may not be a folder named `caddy`.
 
 You will need to place your local configuration inside the folder named `caddy` next to your clone target folder (outside of this git repo).
-I personally prefere to put clone this repo into the hidden folder `/opt/apps/.caddy`, but thats really up to personal preference.
+I personally prefere to clone this repo into the hidden folder `/opt/apps/.caddy`, but thats really up to personal preference.
 
 ```sh
 # create an empty dir for your projects / apps
