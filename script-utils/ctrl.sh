@@ -29,6 +29,7 @@ set -o errtrace
 
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 SCRIPT_NAME="${0:-caddy-ctrl.sh}"
+LOCAL_CONF_DIR="$(realpath "${SCRIPT_DIR}/../local-config/")"
 
 indent() {
   sed 's/^/  /';
@@ -62,7 +63,7 @@ sort_by(.[0]) |
 
 print_usage() {
   local yaml="${SCRIPT_DIR}/commands.yaml"
-  local prompt="root@$(hostname):${SCRIPT_DIR}\$ ${SCRIPT_NAME}"
+  local prompt="root@$(hostname):${LOCAL_CONF_DIR}\$ ${SCRIPT_NAME}"
 
   echo "
 Usage: ${SCRIPT_NAME} --help
