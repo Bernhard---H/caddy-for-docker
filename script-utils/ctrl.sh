@@ -37,8 +37,8 @@ indent() {
 print_usage_flags_table() {
   local tableName="$1"
 
-  echo " ${tableName} "
-  echo "-$(echo "$tableName" | sed 's/./-/g')-"
+  echo "${tableName}"
+  echo "$(echo "$tableName" | sed 's/./-/g')"
   echo ""
 
   cat | jq -r '[
@@ -71,7 +71,7 @@ print_usage_yaml() {
     echo ""
     echo ""
     echo "# ${gTitle} "
-    echo "==$(echo "$gTitle" | sed 's/./=/g')="
+    #echo "==$(echo "$gTitle" | sed 's/./=/g')="
     echo ""
     echo "command group: ${cmdGroup}" | indent
     echo ""
@@ -84,7 +84,7 @@ print_usage_yaml() {
       echo ""
       echo ""
       echo "## ${cTitle} "
-      echo "===$(echo "$cTitle" | sed 's/./=/g')="
+      #echo "===$(echo "$cTitle" | sed 's/./=/g')="
       echo ""
       echo "command: ${cmdGroup} ${cmd}" | indent
       echo ""
@@ -108,7 +108,6 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 =============
 
   CLI tool for controlling the caddy container.
-
 
 "
   print_usage_yaml
