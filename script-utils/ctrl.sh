@@ -44,7 +44,7 @@ print_usage_args_table() {
   echo ""
 
   # read JSON from stdin of function
-  argsTable="$(jq -r '[
+  argsTable="$(cat | jq -r '[
     (
         .arguments | .[]? | label $item | 
         # index in array is column in result-table
