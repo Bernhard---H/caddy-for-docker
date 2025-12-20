@@ -267,10 +267,14 @@ getGetoptShortOptions() {
         # select non-nulls:
         | values
         | .[]
-        | map(., $flag | if has("value") then ":" else null end)
-        | values
-      ] | join("")
-    | join("")
+        | [
+          .,
+          $flag
+            # | if has("value") then ":" else null end
+        ]
+        # | values
+      ] # | join("")
+    # | join("")
   ';
 }
 
