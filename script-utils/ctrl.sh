@@ -258,12 +258,13 @@ export POSIXLY_CORRECT="true"
 # ============
 getFlagShortGetopt() {
   # read JSON from stdin of function
-  jq -r '.flags
+  jq -r '[
+      .flags
       | .[]? 
       | label $item 
       | .short?
       | .[]
-      | join("")
+    ] | join("")
   ';
 }
 
