@@ -266,7 +266,7 @@ getFlagShortGetopt() {
       | join("")';
 }
 
-local -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
+declare -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
 
 echo "flags: $(getFlagShortGetopt <<<"$commandsJson")"
 
