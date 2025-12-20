@@ -65,7 +65,6 @@ print_usage_args_table() {
 
     echo "${tableName}"
     echo "$(echo "$tableName" | sed 's/./-/g')"
-    echo "$COLUMNS"
     echo ""
     column -t -s $'\t' -o " | " -c "$COLUMNS" -n "${tableName}" -C name="TITLE",trunc \
         -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
@@ -102,7 +101,6 @@ print_usage_flags_table() {
 
     echo "${tableName}"
     echo "$(echo "$tableName" | sed 's/./-/g')"
-    echo "$COLUMNS"
     echo ""
     column -t -s $'\t' -o " | " -c "$COLUMNS" -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" \
         -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme <<<"$flagsTable"
