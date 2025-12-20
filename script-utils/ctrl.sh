@@ -124,7 +124,6 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 "
   local json="$(yq -j '.' "$yamlFile")"
   print_usage_flags_table "Global Flags" <<<"$json"
-  echo ""
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -136,8 +135,8 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
     echo ""
 
     local gJson="$(jq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' <<<"$json")"
-    echo "$gJson" | print_usage_args_table "Pos-Args: ${gTitle}" | indent
-    echo "$gJson" | print_usage_flags_table "Flags: ${gTitle}" | indent
+    print_usage_args_table "Pos-Args: ${gTitle}" <<<"$gJson" | indent
+    print_usage_flags_table "Flags: ${gTitle}" <<<"$gJson" | indent
 
     while read -r cmd; do
       local cTitle="${cmdGroup^^} ${cmd}"
@@ -148,8 +147,8 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
       echo ""
 
       local cJson="$(jq --arg cmd "$cmd" '.["commands"] | .[$cmd]' <<<"$gJson")"
-      echo "$cJson" | print_usage_args_table "Pos-Args: ${cTitle}" | indent
-      echo "$cJson" | print_usage_flags_table "Flags: ${cTitle}" | indent
+      print_usage_args_table "Pos-Args: ${cTitle}" <<<"$cJson" | indent
+      print_usage_flags_table "Flags: ${cTitle}" <<<"$cJson" | indent
 
     done < <(jq -r '.["commands"] | keys | .[]' <<<"$gJson")
   done < <(jq -r '.groups | keys | .[]' <<<"$json")
