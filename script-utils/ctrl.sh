@@ -261,9 +261,10 @@ getFlagShortGetopt() {
   jq -r '.flags
       | .[]? 
       | label $item 
-      | if has("short") then .short else break $item end
-      | if isempty(.[]) then break $item else .[] end
-      | join("")';
+      | .short?
+      | .[]
+      | join("")
+  ';
 }
 
 declare -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
