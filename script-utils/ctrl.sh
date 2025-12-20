@@ -67,7 +67,7 @@ print_usage_args_table() {
     echo "$(echo "$tableName" | sed 's/./-/g')"
     echo "$COLUMNS"
     echo ""
-    column -t -s $'\t' -o " | " -c $COLUMNS -n "${tableName}" -C name="TITLE",trunc \
+    column -t -s $'\t' -o " | " -c "$COLUMNS" -n "${tableName}" -C name="TITLE",trunc \
         -C name="isREQUIRED" -C name="allowMULTI" -C name="VALUES" \
         -C name="DESCRIPTION",wrap <<<"$argsTable"
     echo ""
@@ -104,14 +104,17 @@ print_usage_flags_table() {
     echo "$(echo "$tableName" | sed 's/./-/g')"
     echo "$COLUMNS"
     echo ""
-    column -t -s $'\t' -o " | " -c $COLUMNS -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" \
+    column -t -s $'\t' -o " | " -c "$COLUMNS" -n "${tableName}" -C name="TITLE",trunc -C name="FLAGS" \
         -C name="VALUES",wrap -C name="DESCRIPTION",wrap,noextreme <<<"$flagsTable"
     echo ""
   fi
 }
 
 print_usage() {
+  # check display size for variable $COLUMNS
   shopt -s checkwinsize
+  # fill $COLUMNS
+  :|:
 
   local yamlFile="${SCRIPT_DIR}/commands.yaml"
   local prompt="root@$(hostname):${LOCAL_CONF_DIR}\$ ${SCRIPT_NAME}"
