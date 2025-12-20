@@ -261,8 +261,8 @@ getFlagShortGetopt() {
   jq -r '.flags
       | .[]? 
       | label $item 
-      | if has("short") then .short | .[] | join("") else break $item end
-      | if isempty(.[]) then break $item end
+      | if has("short") then .short else break $item end
+      | if isempty(.[]) then break $item else .[] end
       | join("")';
 }
 
