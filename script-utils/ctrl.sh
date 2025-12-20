@@ -256,24 +256,31 @@ export POSIXLY_CORRECT="true"
 
 # Flag parsing
 # ============
-getFlagShortGetopt() {
+getGetoptShortOptions() {
   # read JSON from stdin of function
-  jq -r '[
-      .flags
-      | .[]? 
-      | label $item 
-      | .short?
-      | .[]
-    ] | join("")
+  jq -r '
+    .flags
+    | .[]?
+    | . as $flag
+    | [
+        .short // break $item
+        # select non-nulls:
+        | values
+        | .[]
+        | map(., $flag | if has("value") then ":" else null end)
+        | values
+      ] | join("")
+    | join("")
   ';
 }
 
 declare -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
 
-echo "flags: $(getFlagShortGetopt <<<"$commandsJson")"
+getoptOptions="+$(getGetoptShortOptions <<<"$commandsJson")"
+echo "flags: $getoptOptions"
 
 
-log $ERROR "end of interpreter part."
+log $INFO "end of interpreter part."
 endScript
 
 #####################################################################
