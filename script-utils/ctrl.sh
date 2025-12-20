@@ -30,13 +30,81 @@ set -o errtrace
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 SCRIPT_NAME="${0:-caddy-ctrl.sh}"
 LOCAL_CONF_DIR="$(realpath "${SCRIPT_DIR}/../local-config/")"
+COMMANDS_YAML_FILE="${SCRIPT_DIR}/commands.yaml"
+
+#####################################################################
+# logging basics                                                    #
+#####################################################################
+
+# from Syslog spec: https://www.rfc-editor.org/rfc/rfc5424#section-6.2.1
+declare -rA LOG_LEVEL_MAP=( ["error"]="3" ["warn"]="4" ["info"]="6" ["debug"]="7" ["trace"]="8" )
+declare -r ERROR="error"
+declare -r WARN="warn"
+declare -r INFO="info"
+declare -r DEBUG="debug"
+declare -r TRACE="trace"
+lastErrorCode=0
+activeLogLevel=4
+
+function log()
+{
+  local -r level="${1}"
+  local -r levelNr="${LOG_LEVEL_MAP[${1}]}"
+  local -r msg="${2}"
+
+  if (( levelNr <= activeLogLevel )); then
+    echo "[${level^^}] $(date +'%Y-%m-%d %H:%M:%S.%3N') | $(printf "${msg}" "${@:3}")"
+  fi
+}
+
+function setLogLevel()
+{
+  local -r levelName="${1}"
+  if [ "${LOG_LEVEL_MAP[${levelName}]+abc}" ]; then
+    activeLogLevel="${LOG_LEVEL_MAP[${levelName}]}"
+  else
+    log $ERROR "Unknown loglevel: ${levelName}"
+    return 1
+  fi
+}
+
+function setError()
+{
+  if [[ "$lastErrorCode" -eq 0 ]]; then
+    lastErrorCode="${1:-${ERROR_ERR_UNKNOWN}}"
+  fi
+  log $ERROR "program state changed to NOT_OK with code: $1  current exit code: $lastErrorCode"
+}
+
+function endScript()
+{
+  local code="${1:-0}"
+
+  if [[ "$code" -eq 0 ]]; then
+    code=$lastErrorCode
+  fi
+  if [[ "$code" -eq 0 ]]; then
+    log "++OK++" "Execution result: OK"
+    exit 0
+  fi
+
+  log "-ERROR-" "Execution failed with code: ${code}"
+  exit "$code"
+}
+
+printRunTime() {
+  echo "current runtime: $(date -d "@$SECONDS" +"$(( $SECONDS/3600/24 )) days %H hours %M minutes %S seconds")"
+}
+
+#####################################################################
+# command help generator                                            #
+#####################################################################
 
 indent() {
   sed 's/^/  /';
 }
 
-
-print_usage_args_table() {
+printUsageArgsTable() {
   local tableName="$1"
 
   # read JSON from stdin of function
@@ -73,7 +141,7 @@ print_usage_args_table() {
   fi
 }
 
-print_usage_flags_table() {
+printUsageFlagsTable() {
   local tableName="$1"
 
   # read JSON from stdin of function
@@ -108,14 +176,13 @@ print_usage_flags_table() {
   fi
 }
 
-print_usage() {
+printUsage() {
   # check display size for variable $COLUMNS
   shopt -s checkwinsize
   # fill $COLUMNS
   :|:
 
-  local yamlFile="${SCRIPT_DIR}/commands.yaml"
-  local prompt="root@$(hostname):${LOCAL_CONF_DIR}\$ ${SCRIPT_NAME}"
+  local -r prompt="root@$(hostname):${LOCAL_CONF_DIR}\$ ${SCRIPT_NAME}"
 
   echo "
 Usage: ${SCRIPT_NAME} --help
@@ -127,8 +194,8 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
   CLI tool for controlling the caddy container.
 
 "
-  local json="$(yq -j '.' "$yamlFile")"
-  print_usage_flags_table "Global Flags" <<<"$json"
+  local json="$(yq -j '.' "$COMMANDS_YAML_FILE")"
+  printUsageFlagsTable "Global Flags" <<<"$json"
 
   # display command grouped by command-group
   while read -r cmdGroup; do
@@ -140,8 +207,8 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
     echo ""
 
     local gJson="$(jq -j --arg cmdGroup "$cmdGroup" '.groups | .[$cmdGroup]' <<<"$json")"
-    print_usage_args_table "Pos-Args: ${gTitle}" <<<"$gJson" | indent
-    print_usage_flags_table "Flags: ${gTitle}" <<<"$gJson" | indent
+    printUsageArgsTable "Pos-Args: ${gTitle}" <<<"$gJson" | indent
+    printUsageFlagsTable "Flags: ${gTitle}" <<<"$gJson" | indent
 
     while read -r cmd; do
       local cTitle="${cmdGroup^^} ${cmd}"
@@ -152,79 +219,60 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
       echo ""
 
       local cJson="$(jq --arg cmd "$cmd" '.["commands"] | .[$cmd]' <<<"$gJson")"
-      print_usage_args_table "Pos-Args: ${cTitle}" <<<"$cJson" | indent
-      print_usage_flags_table "Flags: ${cTitle}" <<<"$cJson" | indent
+      printUsageArgsTable "Pos-Args: ${cTitle}" <<<"$cJson" | indent
+      printUsageFlagsTable "Flags: ${cTitle}" <<<"$cJson" | indent
 
     done < <(jq -r '.["commands"] | keys | .[]' <<<"$gJson")
   done < <(jq -r '.groups | keys | .[]' <<<"$json")
 }
 
-print_usage
-exit 0
 #################################################
 
-# from Syslog spec: https://www.rfc-editor.org/rfc/rfc5424#section-6.2.1
-declare -rA LOG_LEVEL_MAP=( ["error"]="3" ["warn"]="4" ["info"]="6" ["debug"]="7" ["trace"]="8" )
-declare -r ERROR="error"
-declare -r WARN="warn"
-declare -r INFO="info"
-declare -r DEBUG="debug"
-declare -r TRACE="trace"
-lastErrorCode=0
-activeLogLevel=4
-
-function log()
-{
-  local -r level="${1}"
-  local -r levelNr="${LOG_LEVEL_MAP[${1}]}"
-  local -r msg="${2}"
-
-  if (( levelNr <= activeLogLevel )); then
-    echo "[${level^^}] $(date +'%Y-%m-%d %H:%M:%S.%3N') | $(printf "${msg}" "${@:3}")"
-  fi
-}
-
-function setError()
-{
-  if [[ "$lastErrorCode" -eq 0 ]]; then
-    lastErrorCode="${1:-${ERROR_ERR_UNKNOWN}}"
-  fi
-  log $ERROR "program state changed to NOT_OK with code: $1  current exit code: $lastErrorCode"
-}
-
-function endScript()
-{
-  local code="${1:-0}"
-
-  if [[ "$code" -eq 0 ]]; then
-    code=$lastErrorCode
-  fi
-  if [[ "$code" -eq 0 ]]; then
-    log "++OK++" "Execution result: OK"
-    exit 0
-  fi
-
-  log "-ERROR-" "Execution failed with code: ${code}"
-  exit "$code"
-}
-
-#################################################
-
-printRunTime() {
-  echo "current runtime: $(date -d "@$SECONDS" +"$(( $SECONDS/3600/24 )) days %H hours %M minutes %S seconds")"
-}
-
-pettyPrintBytes() {
-  numfmt --to=iec-i --suffix=B --format="%3f" "$1"
-}
-
-# Make sure the correct number of command line
-# arguments have been supplied
-if [ $# -lt 1 ]; then
-  log $ERROR "invalid number of arguments have been supplied: $#"
-  print_usage
-  endScript 1
+# print help if no agruments have been supplied
+if [ $# -le 1 ]; then
+  setLogLevel $ERROR
+  printUsage
+  endScript
 fi
+
+#####################################################################
+# interpret/run script arguments                                    #
+#####################################################################
+
+# general purpos constants:
+declare -r BOOL_TRUE=0
+declare -r BOOL_FALSE=1
+
+# check dependency:
+getoptTest=0;
+getopt -T || getoptTest="$?";
+if (( getoptTest != 4 )); then
+    log $ERROR "Please ensure you have the GNU-Version of the 'getopt' command installed!"
+    log $ERROR "exiting..."
+    endScript 1
+fi
+
+export POSIXLY_CORRECT="true"
+
+# Flag parsing
+# ============
+getFlagShortGetopt() {
+  # read JSON from stdin of function
+  jq -r '.flags
+      | .[]? 
+      | label $item 
+      | if has("short") then .short | .[] | join("") else break $item end
+      | if isempty(.[]) then break $item end
+      | join("")';
+}
+
+local -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
+
+echo "flags: $(getFlagShortGetopt <<<"$commandsJson")"
+
+
+log $ERROR "end of interpreter part."
+endScript
 
 #####################################################################
 # GNU GetOpt parsing                                                #
@@ -234,9 +282,9 @@ fi
 declare -r RETURN_TRUE=0
 declare -r RETURN_FALSE=1
 
-getOptTest=0;
-getopt -T || getOptTest="$?";
-if (( getOptTest != 4 )); then
+getoptTest=0;
+getopt -T || getoptTest="$?";
+if (( getoptTest != 4 )); then
     log $ERROR "Please ensure you have the GNU-Version of 'getopt' installed! exiting..."
     endScript 1
 fi
@@ -251,7 +299,7 @@ commandName=
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+vh" --longoptions "help,log:" -- "$@")"
 if [ $? -ne 0 ]; then
   log $ERROR "Error while analyzing the script arguments."
-  print_usage
+  printUsage
   endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
@@ -260,7 +308,7 @@ eval set -- "$parsedArgs"
 while (( "$#" > 0 )); do
   case "$1" in
     --help | -h)
-      print_usage
+      printUsage
       endScript
       ;;
     -v)
@@ -273,7 +321,7 @@ while (( "$#" > 0 )); do
         shift 2
       else
         log $ERROR "Unknown loglevel: $2"
-        print_usage
+        printUsage
         endScript 4
       fi
       ;;
@@ -283,7 +331,7 @@ while (( "$#" > 0 )); do
       ;;
     *)
       log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
-      print_usage
+      printUsage
       endScript 3
       ;;
   esac
@@ -296,7 +344,7 @@ log $INFO "active log level after inital flag parsing: ${activeLogLevel}"
 
 if [ $# -lt 1 ]; then
   log $ERROR "invalid number of arguments have been supplied: Please add the command group you intent to use."
-  print_usage
+  printUsage
   endScript 6
 fi
 tryGroup="${1,,}"
@@ -312,7 +360,7 @@ case "${tryGroup}" in
     ;;
   *)
     log $ERROR "Unknown argument: $1"
-    print_usage
+    printUsage
     endScript 5
     ;;
 esac
@@ -324,7 +372,7 @@ shift
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
   log $ERROR "Error while analyzing the script arguments"
-  print_usage "${commandGroup}"
+  printUsage "${commandGroup}"
   endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
@@ -333,7 +381,7 @@ eval set -- "$parsedArgs"
 while (( "$#" > 0 )); do
   case "$1" in
     --help | -h)
-      print_usage "${commandGroup}"
+      printUsage "${commandGroup}"
       endScript
       ;;
     --)
@@ -342,7 +390,7 @@ while (( "$#" > 0 )); do
       ;;
     *)
       log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
-      print_usage "${commandGroup}"
+      printUsage "${commandGroup}"
       endScript 3
       ;;
   esac
@@ -353,7 +401,7 @@ done
 
 if [ $# -lt 1 ]; then
   log $ERROR "invalid number of arguments have been supplied: Please add the command you intend to use."
-  print_usage "${commandGroup}"
+  printUsage "${commandGroup}"
   endScript 6
 fi
 
@@ -379,7 +427,7 @@ case "${tryCommand}" in
     ;;
   *)
     log $ERROR "Unknown argument: $1"
-    print_usage "${commandGroup}"
+    printUsage "${commandGroup}"
     endScript 5
     ;;
 esac
@@ -391,7 +439,7 @@ shift
 parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" --options "+h" --longoptions "help" -- "$@")"
 if [ $? -ne 0 ]; then
   log $ERROR "Error while analyzing the script arguments"
-  print_usage "${commandGroup}" "${commandName}"
+  printUsage "${commandGroup}" "${commandName}"
   endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
@@ -400,7 +448,7 @@ eval set -- "$parsedArgs"
 while (( "$#" > 0 )); do
   case "$1" in
     --help | -h)
-      print_usage "${commandGroup}" "${commandName}"
+      printUsage "${commandGroup}" "${commandName}"
       endScript
       ;;
     --)
@@ -409,7 +457,7 @@ while (( "$#" > 0 )); do
       ;;
     *)
       log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
-      print_usage "${commandGroup}" "${commandName}"
+      printUsage "${commandGroup}" "${commandName}"
       endScript 3
       ;;
   esac
