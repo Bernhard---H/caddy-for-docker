@@ -263,7 +263,7 @@ getGetoptShortOptions() {
     | .[]?
     | . as $flag
     | [
-        .short // break $item
+        .short
         # select non-nulls:
         | values
         | .[]
