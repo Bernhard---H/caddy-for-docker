@@ -315,7 +315,7 @@ getFlagToFunction() {
         # select non-nulls:
         | values
         | .[]
-        | { (.): toFnName($flag) }
+        | { fn: toFnName($flag), flag: "--\(.)" }
       ), (
         .flags
         | .[]?
@@ -324,7 +324,7 @@ getFlagToFunction() {
         # select non-nulls:
         | values
         | .[]
-        | { (.): toFnName($flag) }
+        | { fn: toFnName($flag), flag: "-\(.)" }
       )
     ]
   ';
