@@ -54,7 +54,7 @@ function log()
 
   if (( levelNr <= activeLogLevel )); then
     local -r logPrefix="$(printf "%-7s %-23s" "[${1^^}]" "$(date +'%Y-%m-%d %H:%M:%S.%3N')")"
-    echo "${logPrefix} | $(printf "${msg}" "${@:3}")"
+    echo "${logPrefix} ${levelNr} | $(printf "${msg}" "${@:3}")"
   fi
 }
 
@@ -85,11 +85,11 @@ function endScript()
     code=$lastErrorCode
   fi
   if [[ "$code" -eq 0 ]]; then
-    log "++OK++" "Execution result: OK"
+    log "OK" "Execution result: OK"
     exit 0
   fi
 
-  log "-ERROR-" "Execution failed with code: ${code}"
+  log "ERROR" "Execution failed with code: ${code}"
   exit "$code"
 }
 
