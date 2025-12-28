@@ -46,6 +46,7 @@ declare -r TRACE="trace"
 lastErrorCode=0
 activeLogLevel=4
 
+
 function log()
 {
   local -r level="${1}"
@@ -59,7 +60,7 @@ function log()
 
 function setLogLevel()
 {
-  local -r levelName="${1}"
+  local -r levelName="${1,,}"
   if [ "${LOG_LEVEL_MAP[${levelName}]+abc}" ]; then
     activeLogLevel="${LOG_LEVEL_MAP[${levelName}]}"
   else
@@ -95,6 +96,8 @@ function endScript()
 printRunTime() {
   echo "current runtime: $(date -d "@$SECONDS" +"$(( $SECONDS/3600/24 )) days %H hours %M minutes %S seconds")"
 }
+
+setLogLevel "${CADDY_CTRL_LOG_LEVEL:-warn}"
 
 #####################################################################
 # command help generator                                            #
