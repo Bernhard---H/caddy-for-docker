@@ -350,6 +350,11 @@ eval set -- "$parsedArgs"
 echo "getFlagToFunction()"
 echo "$(getFlagToFunction <<<"$commandsJson" | indent)"
 
+getFlagToFunction <<<"$commandsJson" | | while read -r flag fnName; do
+    echo "flag: $flag \tfunctionName: $fnName"
+done
+
+
 while (( "$#" > 0 )); do
   case "$1" in
     --help | -h)
