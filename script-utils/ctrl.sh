@@ -278,7 +278,6 @@ getGetoptShortOptions() {
 }
 
 getGetoptLongOptions() {
-  echo -n '+'
   # read JSON from stdin of function
   jq -r '
     [
@@ -297,6 +296,18 @@ getGetoptLongOptions() {
   ';
 }
 
+getFlagToFunction() {
+  # read JSON from stdin of function
+  jq -r '
+    .flags
+    | .[]?
+    | . as $flag
+    | .long
+    # select non-nulls:
+    | values
+    | .[]
+  ';
+}
 
 declare -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
 
@@ -314,6 +325,9 @@ if [ $? -ne 0 ]; then
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
+
+echo "getFlagToFunction()"
+echo "$(getFlagToFunction <<<"$commandsJson")"
 
 while (( "$#" > 0 )); do
   case "$1" in
