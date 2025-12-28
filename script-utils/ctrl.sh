@@ -307,6 +307,7 @@ getFlagToFunction() {
         | .long
         # select non-nulls:
         | values
+        | .[]
       ), (
         .flags
         | .[]?
@@ -314,6 +315,7 @@ getFlagToFunction() {
         | .short
         # select non-nulls:
         | values
+        | .[]
       )
     ]
   ';
