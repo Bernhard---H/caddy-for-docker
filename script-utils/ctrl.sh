@@ -257,30 +257,25 @@ export POSIXLY_CORRECT="true"
 # Flag parsing
 # ============
 getGetoptShortOptions() {
+  echo -n '+'
   # read JSON from stdin of function
   jq -r '
-    .flags
-    | .[]?
-    | . as $flag
-    | [
-        .short
-        # select non-nulls:
-        | values
-        | .[]
-        | [
-          .,
-          $flag
-            # | if has("value") then ":" else null end
-        ]
-        # | values
-      ] # | join("")
-    # | join("")
+    [
+      .flags
+      | .[]?
+      | . as $flag
+      | .short
+      # select non-nulls:
+      | values
+      | .[]
+      | ., ( $flag | if has("value") then ":" else null end )
+    ] | join("")
   ';
 }
 
 declare -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
 
-getoptOptions="+$(getGetoptShortOptions <<<"$commandsJson")"
+getoptOptions="$(getGetoptShortOptions <<<"$commandsJson")"
 echo "flags: $getoptOptions"
 
 
