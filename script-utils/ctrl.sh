@@ -299,7 +299,8 @@ getGetoptLongOptions() {
 getFlagToFunction() {
   # read JSON from stdin of function
   jq -r '
-    def toFnName:
+    def toFnName(flag):
+      flag |
       if has("function") then
         .function
       elif has("title") then
