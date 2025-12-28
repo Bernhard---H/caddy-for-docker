@@ -289,7 +289,7 @@ getGetoptLongOptions() {
       | values
       | .[]
       | (
-        ., ( $flag | if has("value") then ":" else null end )
+        [ ., ( $flag | if has("value") then ":" else null end ) ]
         | join("")
       )
     ] | join(",")
