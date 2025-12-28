@@ -314,6 +314,38 @@ fi
 log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
+while (( "$#" > 0 )); do
+  case "$1" in
+    --help | -h)
+      printUsage
+      endScript
+      ;;
+    -v)
+      ((activeLogLevel++))
+      ;;
+    --log)
+      setLogLevel "${2}"
+      if (( "$?" > 0 )); then
+        printUsage
+        endScript 4
+      fi
+      shift
+      ;;
+    --)
+      break
+      ;;
+    *)
+      log $ERROR "Internal parsing error of scritp ${SCRIPT_NAME}."
+      printUsage
+      endScript 3
+      ;;
+  esac
+  shift
+done
+
+log $DEBUG "active log level after inital flag parsing: ${activeLogLevel}"
+
+
 
 log $INFO "end of interpreter part."
 endScript
