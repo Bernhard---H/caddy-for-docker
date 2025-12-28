@@ -54,7 +54,7 @@ function log()
 
   if (( levelNr <= activeLogLevel )); then
     local -r logPrefix="$(printf "%-7s %-23s" "[${1^^}]" "$(date +'%Y-%m-%d %H:%M:%S.%3N')")"
-    echo "${logPrefix} ${levelNr} | $(printf "${msg}" "${@:3}")"
+    echo "${logPrefix} | $(printf "${msg}" "${@:3}")"
   fi
 }
 
