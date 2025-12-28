@@ -273,10 +273,43 @@ getGetoptShortOptions() {
   ';
 }
 
+getGetoptLongOptions() {
+  echo -n '+'
+  # read JSON from stdin of function
+  jq -r '
+    [
+      .flags
+      | .[]?
+      | . as $flag
+      | .long
+      # select non-nulls:
+      | values
+      | .[]
+      | (
+        ., ( $flag | if has("value") then ":" else null end )
+        | join("")
+      )
+    ] | join(",")
+  ';
+}
+
+
 declare -r commandsJson="$(yq -j '.' "$COMMANDS_YAML_FILE")"
 
-getoptOptions="$(getGetoptShortOptions <<<"$commandsJson")"
-echo "flags: $getoptOptions"
+log $TRACE "flags short options: $(getGetoptShortOptions <<<"$commandsJson")"
+log $TRACE "flags long options: $(getGetoptLongOptions <<<"$commandsJson")"
+
+# do flag parsing:
+parsedArgs="$(getopt --name "${SCRIPT_NAME}" --shell "bash" \
+      --options "$(getGetoptShortOptions <<<"$commandsJson")" \
+      --longoptions "$(getGetoptLongOptions <<<"$commandsJson")" -- "$@")"
+if [ $? -ne 0 ]; then
+  log $ERROR "Error while analyzing the script arguments."
+  printUsage
+  endScript 2
+fi
+log $TRACE "parsed arguments: ${parsedArgs}"
+#eval set -- "$parsedArgs"
 
 
 log $INFO "end of interpreter part."
