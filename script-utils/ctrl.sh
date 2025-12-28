@@ -299,6 +299,12 @@ getGetoptLongOptions() {
 getFlagToFunction() {
   # read JSON from stdin of function
   jq -r '
+    def toFnName:
+      if has("function") then
+        .function
+      elif has("title") then
+        .title
+      end;
     [
       (
         .flags
@@ -308,6 +314,7 @@ getFlagToFunction() {
         # select non-nulls:
         | values
         | .[]
+        | { (.): toFnName($flag) }
       ), (
         .flags
         | .[]?
@@ -316,6 +323,7 @@ getFlagToFunction() {
         # select non-nulls:
         | values
         | .[]
+        | { (.): toFnName($flag) }
       )
     ]
   ';
