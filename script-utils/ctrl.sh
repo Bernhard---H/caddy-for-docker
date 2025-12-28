@@ -234,6 +234,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 # print help if no agruments have been supplied
 if [ $# -le 1 ]; then
   setLogLevel $ERROR
+  log $ERROR "Please provide some CLI arguments."
   printUsage
   endScript
 fi
