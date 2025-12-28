@@ -11,6 +11,10 @@ flags:
     short:
       - v
     description: "increases logging level, may be used multiple times"
+  - title: get-version
+    long:
+      - version
+    description: "print the current program/script version"
   - title: log-level
     long:
       - log
