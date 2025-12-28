@@ -326,7 +326,7 @@ getFlagToFunction() {
         | .[]
         | { fn: toFnName($flag), flag: "-\(.)" }
       )
-    ] | "\(.flag) \(.fn)"
+    ] | .[] | "\(.flag) \(.fn)"
   ';
 }
 
