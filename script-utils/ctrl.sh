@@ -299,13 +299,23 @@ getGetoptLongOptions() {
 getFlagToFunction() {
   # read JSON from stdin of function
   jq -r '
-    .flags
-    | .[]?
-    | . as $flag
-    | .long
-    # select non-nulls:
-    | values
-    | .[]
+    [
+      (
+        .flags
+        | .[]?
+        | . as $flag
+        | .long
+        # select non-nulls:
+        | values
+      ), (
+        .flags
+        | .[]?
+        | . as $flag
+        | .short
+        # select non-nulls:
+        | values
+      )
+    ]
   ';
 }
 
@@ -327,7 +337,7 @@ log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
 echo "getFlagToFunction()"
-echo "$(getFlagToFunction <<<"$commandsJson")"
+echo "$(getFlagToFunction <<<"$commandsJson" | indent)"
 
 while (( "$#" > 0 )); do
   case "$1" in
