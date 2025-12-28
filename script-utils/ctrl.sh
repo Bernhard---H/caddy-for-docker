@@ -49,12 +49,12 @@ activeLogLevel=4
 
 function log()
 {
-  local -r level="${1}"
   local -r levelNr="${LOG_LEVEL_MAP[${1}]}"
   local -r msg="${2}"
 
   if (( levelNr <= activeLogLevel )); then
-    echo "[${level^^}] $(date +'%Y-%m-%d %H:%M:%S.%3N') | $(printf "${msg}" "${@:3}")"
+    local -r logPrefix="$(printf "%-7s %-23s" "[${1^^}]" "$(date +'%Y-%m-%d %H:%M:%S.%3N')")"
+    echo "${logPrefix} | $(printf "${msg}" "${@:3}")"
   fi
 }
 
@@ -312,7 +312,7 @@ if [ $? -ne 0 ]; then
   endScript 2
 fi
 log $TRACE "parsed arguments: ${parsedArgs}"
-#eval set -- "$parsedArgs"
+eval set -- "$parsedArgs"
 
 
 log $INFO "end of interpreter part."
