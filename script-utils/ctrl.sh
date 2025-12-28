@@ -232,7 +232,7 @@ Usage: ${SCRIPT_NAME} <GROUP> <COMMAND>
 #################################################
 
 # print help if no agruments have been supplied
-if (( "$#" <= 1 )); then
+if (( "$#" == 0 )); then
   setLogLevel $ERROR
   log $ERROR "Please provide some CLI arguments."
   printUsage
