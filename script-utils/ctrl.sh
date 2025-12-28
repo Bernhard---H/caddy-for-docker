@@ -351,7 +351,7 @@ echo "getFlagToFunction()"
 echo "$(getFlagToFunction <<<"$commandsJson" | indent)"
 
 getFlagToFunction <<<"$commandsJson" | while read -r flag fnName; do
-    echo "flag: $flag \tfunctionName: $fnName"
+    echo "flag: $flag   functionName: $fnName"
 done
 
 
