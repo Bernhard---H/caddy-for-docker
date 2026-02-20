@@ -7,7 +7,6 @@
     #acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
     renew_interval 12h
 
-
     servers :443 {
         protocols h1 h2 h3
         name https
@@ -17,7 +16,7 @@
     servers :80 {
         protocols h1
         name http
-    }    
+    }
 }
 
 import conf.d/*
