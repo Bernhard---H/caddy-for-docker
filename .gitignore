@@ -1,4 +1,6 @@
 
+/compose.override.yml
+
 /caddy.env
 /.env
 
