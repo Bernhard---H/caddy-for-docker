@@ -1,14 +1,16 @@
-.PHONY: clean virtualenv test docker dist dist-upload
+.PHONY: clean dev test docker dist dist-upload
 
 clean:
 	find . -name '*.py[co]' -delete
 
-virtualenv:
-	virtualenv --prompt '|> caddy_ctrl <| ' env
-	env/bin/pip install -r requirements-dev.txt
-	env/bin/python setup.py develop
+# setup development environment
+dev:
+	python3 -m venv venv
+	venv/bin/pip install -r requirements-dev.txt
+	venv/bin/python setup.py develop
 	@echo
-	@echo "VirtualENV Setup Complete. Now run: source env/bin/activate"
+	@echo "Setup of python3 virtual environment complete."
+	@echo "  Now run: source venv/bin/activate"
 	@echo
 
 test:
