@@ -17,11 +17,11 @@ This project includes a number of helpers in the `Makefile` to streamline common
 The following demonstrates setting up and working with a development environment:
 
 ```
-### create a virtualenv for development
+### setup python3 venv for development
 
-$ make virtualenv
+$ make dev
 
-$ source env/bin/activate
+$ source venv/bin/activate
 
 
 ### run caddy_ctrl cli application
