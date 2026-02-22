@@ -352,11 +352,11 @@ eval set -- "$parsedArgs"
 echo "getFlagToFunction()"
 echo "'$(getFlagToFunction <<<"$commandsJson" | indent)'"
 
-getFlagToFunction <<<"$commandsJson" | while read -r flag fnName; do
+while read -r flag fnName; do
     echo "flag: $flag   functionName: $fnName"
     # https://stackoverflow.com/a/85903
     [[ $(type -t "$fnName") == function ]] && echo "function $fnName exists"
-done
+done <<<"$(getFlagToFunction <<<"$commandsJson")"
 
 
 while (( "$#" > 0 )); do
