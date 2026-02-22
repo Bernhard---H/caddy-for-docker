@@ -2,6 +2,7 @@
 
 clean:
 	find . -name '*.py[co]' -delete
+	rm -rf "build" ".pytest_cache" "coverage-report" "caddy_ctrl.egg-info"
 
 # setup development environment
 dev:
