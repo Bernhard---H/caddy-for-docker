@@ -305,6 +305,8 @@ getFlagToFunction() {
         .function
       elif has("title") then
         .title
+        | gsub("^[^a-zA-Z_]+"; "")
+        | gsub("[^0-9a-zA-Z_]"; "_")
       end;
     [
       (
@@ -348,7 +350,7 @@ log $TRACE "parsed arguments: ${parsedArgs}"
 eval set -- "$parsedArgs"
 
 echo "getFlagToFunction()"
-echo "$(getFlagToFunction <<<"$commandsJson" | indent)"
+echo "'$(getFlagToFunction <<<"$commandsJson" | indent)'"
 
 getFlagToFunction <<<"$commandsJson" | while read -r flag fnName; do
     echo "flag: $flag   functionName: $fnName"
