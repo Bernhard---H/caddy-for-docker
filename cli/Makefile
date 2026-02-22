@@ -4,7 +4,7 @@ clean:
 	find . -name '*.py[co]' -delete
 
 virtualenv:
-	virtualenv --prompt '|> caddy-ctrl <| ' env
+	virtualenv --prompt '|> caddy_ctrl <| ' env
 	env/bin/pip install -r requirements-dev.txt
 	env/bin/python setup.py develop
 	@echo
@@ -14,13 +14,13 @@ virtualenv:
 test:
 	python -m pytest \
 		-v \
-		--cov=caddy-ctrl \
+		--cov=caddy_ctrl \
 		--cov-report=term \
 		--cov-report=html:coverage-report \
 		tests/
 
 docker: clean
-	docker build -t caddy-ctrl:latest .
+	docker build -t caddy_ctrl:latest .
 
 dist: clean
 	rm -rf dist/*

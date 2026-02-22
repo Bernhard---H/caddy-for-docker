@@ -5,15 +5,15 @@ from .core.exc import CaddyCliError
 from .controllers.base import Base
 
 # configuration defaults
-CONFIG = init_defaults('caddy-ctrl')
-CONFIG['caddy-ctrl']['foo'] = 'bar'
+CONFIG = init_defaults('caddy_ctrl')
+CONFIG['caddy_ctrl']['foo'] = 'bar'
 
 
 class CaddyCli(App):
     """caddy server for docker primary application."""
 
     class Meta:
-        label = 'caddy-ctrl'
+        label = 'caddy_ctrl'
 
         # configuration defaults
         config_defaults = CONFIG
@@ -50,7 +50,7 @@ class CaddyCliTest(TestApp,CaddyCli):
     """A sub-class of CaddyCli that is better suited for testing."""
 
     class Meta:
-        label = 'caddy-ctrl'
+        label = 'caddy_ctrl'
 
 
 def main():

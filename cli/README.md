@@ -24,9 +24,9 @@ $ make virtualenv
 $ source env/bin/activate
 
 
-### run caddy-ctrl cli application
+### run caddy_ctrl cli application
 
-$ caddy-ctrl --help
+$ caddy_ctrl --help
 
 
 ### run pytest / coverage
@@ -65,5 +65,5 @@ and can be built with the included `make` helper:
 ```
 $ make docker
 
-$ docker run -it caddy-ctrl --help
+$ docker run -it caddy_ctrl --help
 ```

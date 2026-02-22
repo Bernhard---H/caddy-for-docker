@@ -1,15 +1,15 @@
 
 from pytest import raises
-from caddy-ctrl.main import CaddyCliTest
+from caddy_ctrl.main import CaddyCliTest
 
-def test_caddy-ctrl():
-    # test caddy-ctrl without any subcommands or arguments
+def test_caddy_ctrl():
+    # test caddy_ctrl without any subcommands or arguments
     with CaddyCliTest() as app:
         app.run()
         assert app.exit_code == 0
 
 
-def test_caddy-ctrl_debug():
+def test_caddy_ctrl_debug():
     # test that debug mode is functional
     argv = ['--debug']
     with CaddyCliTest(argv=argv) as app:

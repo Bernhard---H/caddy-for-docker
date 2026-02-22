@@ -17,9 +17,9 @@ class Base(Controller):
         description = 'CLI tool for easy management of the caddy server reverse proxy setup'
 
         # text displayed at the bottom of --help output
-        epilog = 'Usage: caddy-ctrl command1 --foo bar'
+        epilog = 'Usage: caddy_ctrl command1 --foo bar'
 
-        # controller level arguments. ex: 'caddy-ctrl --version'
+        # controller level arguments. ex: 'caddy_ctrl --version'
         arguments = [
             ### add a version banner
             ( [ '-v', '--version' ],
@@ -37,7 +37,7 @@ class Base(Controller):
     @ex(
         help='example sub command1',
 
-        # sub-command level arguments. ex: 'caddy-ctrl command1 --foo bar'
+        # sub-command level arguments. ex: 'caddy_ctrl command1 --foo bar'
         arguments=[
             ### add a sample foo option under subcommand namespace
             ( [ '-f', '--foo' ],

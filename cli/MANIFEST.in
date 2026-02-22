@@ -2,4 +2,4 @@ recursive-include *.py
 include setup.cfg
 include README.md CHANGELOG.md LICENSE.md
 include *.txt
-recursive-include caddy-ctrl/templates *
+recursive-include caddy_ctrl/templates *

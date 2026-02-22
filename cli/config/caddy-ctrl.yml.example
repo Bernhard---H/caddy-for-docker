@@ -1,19 +1,19 @@
 ### caddy server for docker Configuration Settings
 ---
 
-caddy-ctrl:
+caddy_ctrl:
 
 ### Toggle application level debug (does not toggle framework debugging)
 # debug: false
 
 ### Where external (third-party) plugins are loaded from
-# plugin_dir: /var/lib/caddy-ctrl/plugins/
+# plugin_dir: /var/lib/caddy_ctrl/plugins/
 
 ### Where all plugin configurations are loaded from
-# plugin_config_dir: /etc/caddy-ctrl/plugins.d/
+# plugin_config_dir: /etc/caddy_ctrl/plugins.d/
 
 ### Where external templates are loaded from
-# template_dir: /var/lib/caddy-ctrl/templates/
+# template_dir: /var/lib/caddy_ctrl/templates/
 
 ### The log handler label
 # log_handler: colorlog
