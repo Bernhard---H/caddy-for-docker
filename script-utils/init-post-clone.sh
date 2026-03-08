@@ -3,16 +3,17 @@
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 REPO_DIR=$(realpath -- "${SCRIPT_DIR}/..")
 # sanity-check $REPO_DIR path:
-if [ ! -d "${REPO_DIR}/.git" ]; then
-    echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
+echo "${REPO_DIR}/.git"
+if ( ! test -d "${REPO_DIR}/.git" ); then
+    >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
 fi
 if [ ! -f "${REPO_DIR}/.git/config" ]; then
-    echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
+    >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
 fi
 if ! grep -q "Bernhard---H/caddy-for-docker.git" "${REPO_DIR}/.git/config"; then
-    echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
+    >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
 fi
 # success -> $REPO_DIR seems to be as expected
