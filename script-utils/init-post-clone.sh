@@ -10,11 +10,11 @@ if ( ! test -d "${REPO_DIR}/.git" ); then
 fi
 if [ ! -f "${REPO_DIR}/.git/config" ]; then
     >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
-    exit 1;
+    exit 2;
 fi
 if ! grep -q "Bernhard---H/caddy-for-docker.git" "${REPO_DIR}/.git/config"; then
     >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
-    exit 1;
+    exit 3;
 fi
 # success -> $REPO_DIR seems to be as expected
 
