@@ -3,7 +3,7 @@
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 REPO_DIR=$(realpath -- "${SCRIPT_DIR}/..")
 # sanity-check $REPO_DIR path:
-echo "${REPO_DIR}/.git"
+echo "repository git-dir: ${REPO_DIR}/.git"
 if ( ! test -d "${REPO_DIR}/.git" ); then
     >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
