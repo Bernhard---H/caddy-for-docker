@@ -3,7 +3,7 @@
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 REPO_DIR=$(realpath -- "${SCRIPT_DIR}/..")
 # sanity-check $REPO_DIR path:
-echo "repository git-dir: ${REPO_DIR}/.git"
+#echo "repository git-dir: ${REPO_DIR}/.git"
 if ( ! test -d "${REPO_DIR}/.git" ); then
     >&2 echo "the calculated value of \$REPO_DIR seems to be wrong: ${REPO_DIR}"
     exit 1;
@@ -90,13 +90,15 @@ fi
 apt-get -yqq install jq yq
 
 function printIpv6Required() {
-    echo "enabling IPv6 in docker is required!"
-    echo ""
-    echo "please ammend or create the file: /etc/docker/daemon.json"
-    echo "using this JSON: "
-    echo '{"ipv6":true}' | jq '.'
-    echo ""
-    echo "source: https://docs.docker.com/engine/daemon/ipv6/#use-ipv6-for-the-default-bridge-network"
+    {
+        echo "enabling IPv6 in docker is required!"
+        echo ""
+        echo "please ammend or create the file: /etc/docker/daemon.json"
+        echo "using this JSON: "
+        echo '{"ipv6":true}' | jq '.'
+        echo ""
+        echo "source: https://docs.docker.com/engine/daemon/ipv6/#use-ipv6-for-the-default-bridge-network"
+    } >&2
 }
 
 if [ ! -f "/etc/docker/daemon.json" ]; then
