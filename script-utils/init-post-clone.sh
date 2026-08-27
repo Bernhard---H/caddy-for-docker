@@ -98,6 +98,7 @@ function genULA() {
 function printIpv6Required() {
     local daemonJson = '{"ipv6":true,"fixed-cidr-v6":"'
     daemonJson="${daemonJson}$(genULA)\"}"
+    echo "debugging: $daemonJson"
     {
         echo "enabling IPv6 in docker is required!"
         echo ""
