@@ -89,17 +89,26 @@ fi
 
 apt-get -yqq install jq yq
 
+function genULA() {
+    # info: https://en.wikipedia.org/wiki/Unique_local_address
+    # source: https://stackoverflow.com/a/34329057
+    hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "0:/64"' /dev/random
+}
+
 function printIpv6Required() {
+    local daemonJson = '{"ipv6":true,"fixed-cidr-v6":"'
+    daemonJson="${daemonJson}$(genULA)\"}"
     {
         echo "enabling IPv6 in docker is required!"
         echo ""
         echo "please ammend or create the file: /etc/docker/daemon.json"
         echo "  using this JSON Sippet: "
-        echo '{"ipv6":true}' | jq '.'
+        echo "$daemonJson" | jq '.'
         echo ""
         echo "source: https://docs.docker.com/engine/daemon/ipv6/#use-ipv6-for-the-default-bridge-network"
     } >&2
 }
+
 
 if [ ! -f "/etc/docker/daemon.json" ]; then
     printIpv6Required
