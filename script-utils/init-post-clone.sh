@@ -94,7 +94,7 @@ function printIpv6Required() {
         echo "enabling IPv6 in docker is required!"
         echo ""
         echo "please ammend or create the file: /etc/docker/daemon.json"
-        echo "using this JSON: "
+        echo "  using this JSON Sippet: "
         echo '{"ipv6":true}' | jq '.'
         echo ""
         echo "source: https://docs.docker.com/engine/daemon/ipv6/#use-ipv6-for-the-default-bridge-network"
