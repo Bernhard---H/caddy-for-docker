@@ -92,7 +92,7 @@ apt-get -yqq install jq yq
 function genULA() {
     # info: https://en.wikipedia.org/wiki/Unique_local_address
     # source: https://stackoverflow.com/a/34329057
-    hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "0:/64"' /dev/random
+    hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "0::/64"' /dev/random
 }
 
 function printIpv6Required() {
