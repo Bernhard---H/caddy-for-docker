@@ -87,6 +87,23 @@ if [ ! -L "/etc/cron.daily/caddy-daily" ]; then
     ln -s "${REPO_DIR}/script-utils/daily.sh" "/etc/cron.daily/caddy-daily"
 fi
 
+apt-get -yqq install jq yq
+
+function printIpv6Required() {
+    echo "enabling IPv6 in docker is required!"
+    echo ""
+    echo "please ammend or create the file: /etc/docker/daemon.json"
+    echo "using this JSON: "
+    echo '{"ipv6":true}' | jq '.'
+    echo ""
+    echo "source: https://docs.docker.com/engine/daemon/ipv6/#use-ipv6-for-the-default-bridge-network"
+}
+
+if [ ! -f "/etc/docker/daemon.json" ]; then
+    printIpv6Required
+fi
+
+echo "early exit"; exit 0;
 
 # load network.env variables:
 if [ -f "${REPO_DIR}/.env" ]; then
@@ -96,7 +113,7 @@ else
     echo "loading default network config"
     export $(grep --invert-match '#' "${defaultConf}/network.env" | xargs)
 
-    echo "safe initial caddy networking config"
+    echo "setup initial caddy networking config"
     cp "${defaultConf}/network.env" "${REPO_DIR}/.env"
     chmod 0444 "${REPO_DIR}/.env"
     chattr +i "${REPO_DIR}/.env"
@@ -106,11 +123,13 @@ else
     fi
 fi
 
-docker network inspect caddy > /dev/null 2>&1 || {
+if docker network inspect caddy > /dev/null 2>&1; then {
     echo "create docker network \"caddy\"";
-    docker network create --driver bridge --subnet "${CADDY_IPv4_SUBNET}" --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" --ipv6=false caddy
+    docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
+        --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
+        --ipv6=true --subnet ${CADDY_IPv6_SUBNET} --gateway "${CADDY_IPv6_GATEWAY}" \
+        --ip-range "${CADDY_IPv6_IPRANGE}" caddy
 }
 
-apt-get -yqq install jq yq
 
 echo "all done."
