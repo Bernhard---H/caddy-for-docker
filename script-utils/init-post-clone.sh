@@ -102,7 +102,7 @@ function extractDockerCidr() {
 function extractULA() {
     local ula=""
     IFS=':' read -ra IPV6 <<< "$(extractDockerCidr)"
-    for i in "${IPV6[@]}"; do
+    for i in "${#IPV6[@]}"; do
         ula="$ula:$i"
     done
     echo "$ula"
@@ -125,6 +125,7 @@ function printIpv6Required() {
 if [ ! -f "/etc/docker/daemon.json" ]; then
     printIpv6Required
 else
+    extractDockerCidr
     extractULA
 fi
 
