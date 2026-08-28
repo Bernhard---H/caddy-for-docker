@@ -107,9 +107,11 @@ function extractULA() {
             ula="${IPV6[$i]}"
         elif [ $i -lt 3 ]; then
             ula="$ula:${IPV6[$i]}"
+        else
+            echo "else"
         fi
     done
-    echo "$ula"
+    echo "ula: $ula"
 }
 
 function printIpv6Required() {
