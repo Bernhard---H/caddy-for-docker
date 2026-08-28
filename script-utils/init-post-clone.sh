@@ -103,6 +103,7 @@ function extractULA() {
     local ula=""
     IFS=':' read -ra IPV6 <<< "$(extractDockerCidr)"
     for i in "${#IPV6[@]}"; do
+        echo "i: $i"
         if [ $i -lt 1 ]; then
             ula="${IPV6[$i]}"
         elif [ $i -lt 3 ]; then
