@@ -95,6 +95,19 @@ function genULA() {
     hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "1::/64"' /dev/random
 }
 
+function extractDockerCidr() {
+    jq -r '.["fixed-cidr-v6"]' /etc/docker/daemon.json
+}
+
+function extractULA() {
+    local ula=""
+    IFS=':' read -ra IPV6 <<< "$(extractDockerCidr)"
+    for i in "${IPV6[@]}"; do
+        $ula="$ula:$i"
+    done
+    echo "$ula"
+}
+
 function printIpv6Required() {
     local daemonJson='{"ipv6":true,"fixed-cidr-v6":"'
     daemonJson="${daemonJson}$(genULA)\"}"
@@ -109,9 +122,10 @@ function printIpv6Required() {
     } >&2
 }
 
-
 if [ ! -f "/etc/docker/daemon.json" ]; then
     printIpv6Required
+else
+    extractULA
 fi
 
 echo "early exit"; exit 0;
