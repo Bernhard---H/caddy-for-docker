@@ -124,6 +124,13 @@ function printIpv6Required() {
     } >&2
 }
 
+function editVar() {
+    local varName="$1"
+    local varValue="$2"
+
+    cat - | sed "s/$varName=.*/${varName}=${varValue}/g"
+}
+
 if [ ! -f "/etc/docker/daemon.json" ]; then
     printIpv6Required
 else
@@ -131,7 +138,6 @@ else
     extractULA
 fi
 
-echo "early exit"; exit 0;
 
 # load network.env variables:
 if [ -f "${REPO_DIR}/.env" ]; then
@@ -150,6 +156,8 @@ else
         git checkout HEAD -- "${defaultConf}/network.env"
     fi
 fi
+
+echo "early exit"; exit 0;
 
 if docker network inspect caddy > /dev/null 2>&1; then {
     echo "create docker network \"caddy\"";
