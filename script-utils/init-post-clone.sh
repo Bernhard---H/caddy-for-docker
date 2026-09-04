@@ -159,13 +159,13 @@ fi
 
 echo "early exit"; exit 0;
 
-if docker network inspect caddy > /dev/null 2>&1; then {
+if ! docker network inspect caddy > /dev/null 2>&1; then
     echo "create docker network \"caddy\"";
     docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
         --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
         --ipv6=true --subnet ${CADDY_IPv6_SUBNET} --gateway "${CADDY_IPv6_GATEWAY}" \
         --ip-range "${CADDY_IPv6_IPRANGE}" caddy
-}
+fi
 
 
 echo "all done."
