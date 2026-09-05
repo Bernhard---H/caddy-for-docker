@@ -133,6 +133,7 @@ function editVar() {
 
 if [ ! -f "/etc/docker/daemon.json" ]; then
     printIpv6Required
+    exit 1
 else
     extractDockerCidr
     extractULA
@@ -159,13 +160,25 @@ fi
 
 echo "early exit"; exit 0;
 
-if ! docker network inspect caddy > /dev/null 2>&1; then
-    echo "create docker network \"caddy\"";
-    docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
-        --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
-        --ipv6=true --subnet ${CADDY_IPv6_SUBNET} --gateway "${CADDY_IPv6_GATEWAY}" \
-        --ip-range "${CADDY_IPv6_IPRANGE}" caddy
-fi
+function caddyCreator() {
+    if ! docker network inspect caddy > /dev/null 2>&1; then
+        echo "create docker network \"caddy\"";
+        docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
+            --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
+            --ipv6=true --subnet ${CADDY_IPv6_SUBNET} --gateway "${CADDY_IPv6_GATEWAY}" \
+            --ip-range "${CADDY_IPv6_IPRANGE}" caddy
+    fi
+}
+
+function caddyLsAttached() {
+    docker container ls --filter "network=caddy" --format "{{.ID}}"
+}
+
+attached=$(caddyLsAttached)
+
+while IFS= read -r containerId; do
+    docker network disconnect caddy "$containerId"
+done <<< "$attached"
 
 
 echo "all done."
