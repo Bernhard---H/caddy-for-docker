@@ -161,7 +161,11 @@ fi
 echo "early exit"; exit 0;
 
 function caddyCreator() {
-    if ! docker network inspect caddy > /dev/null 2>&1; then
+    if docker network inspect caddy > /dev/null 2>&1; then
+        if [ "$(docker network inspect caddy --format "{{.EnableIPv6}}")" -eq "false" ]; then
+            # should recreate caddy network?
+        fi
+    else
         echo "create docker network \"caddy\"";
         docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
             --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
@@ -174,11 +178,14 @@ function caddyLsAttached() {
     docker container ls --filter "network=caddy" --format "{{.ID}}"
 }
 
-attached=$(caddyLsAttached)
+function caddyDisconnect() {
+    attached=$(caddyLsAttached)
 
-while IFS= read -r containerId; do
-    docker network disconnect caddy "$containerId"
-done <<< "$attached"
+    while IFS= read -r containerId; do
+        docker network disconnect caddy "$containerId"
+    done <<< "$attached"
+}
+
 
 
 echo "all done."
