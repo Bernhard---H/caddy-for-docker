@@ -95,21 +95,6 @@ function genULA() {
     hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "1::/64"' /dev/random
 }
 
-function extractDockerCidr() {
-    jq -r '.["fixed-cidr-v6"]' /etc/docker/daemon.json
-}
-
-function extractULA() {
-    local ula=""
-    IFS=':' read -ra IPV6 <<< "$(extractDockerCidr)"
-    for i in $(seq 0 ${#IPV6[@]}); do
-        if [ $i -lt 3 ]; then
-            ula="$ula${IPV6[$i]}:"
-        fi
-    done
-    echo "$ula"
-}
-
 function printIpv6Required() {
     local daemonJson='{"ipv6":true,"fixed-cidr-v6":"'
     daemonJson="${daemonJson}$(genULA)\"}"
@@ -124,52 +109,91 @@ function printIpv6Required() {
     } >&2
 }
 
+function extractDockerCidr() {
+    jq -r '.["fixed-cidr-v6"] // empty' /etc/docker/daemon.json
+}
+
+function genCaddySubnet() {
+    local cidr re subnetId
+    cidr=$(extractDockerCidr | tr 'A-F' 'a-f')
+    re='^([0-9a-f]{1,4}):([0-9a-f]{1,4}):([0-9a-f]{1,4})(:([0-9a-f]{1,4}))?::/64$'
+    if [[ ! "$cidr" =~ $re ]]; then
+        printIpv6Required
+        return 1
+    fi
+    subnetId=$(( 16#${BASH_REMATCH[5]:-0} + 1 ))
+    if (( subnetId > 0xffff )); then
+        >&2 echo "no free IPv6 subnet id left after ${cidr}"
+        return 1
+    fi
+    printf '%s:%s:%s:%x' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" \
+        "${BASH_REMATCH[3]}" "$subnetId"
+}
+
 function editVar() {
     local varName="$1"
     local varValue="$2"
 
-    cat - | sed "s/$varName=.*/${varName}=${varValue}/g"
+    sed "s|^${varName}=.*|${varName}=${varValue}|"
+}
+
+function genDefaultsIPv4() {
+    cat "${defaultConf}/network.env"
+}
+
+function genDefaultsIPv6() {
+    local prefix
+    prefix=$(genCaddySubnet) || return 1
+
+    cat "${defaultConf}/network.ipv6.env" \
+        | editVar CADDY_IPv6_SUBNET "${prefix}::/64" <  \
+        | editVar CADDY_IPv6_IPRANGE "${prefix}::/64" \
+        | editVar CADDY_IPv6_GATEWAY "${prefix}::1" \
+        | editVar CADDY_IPv6_APP_CONTAINER "${prefix}::2"
+}
+
+function createEnvFile() {
+    {
+        genDefaultsIPv4
+        echo
+        genDefaultsIPv6
+    } > "${REPO_DIR}/.env"
 }
 
 if [ ! -f "/etc/docker/daemon.json" ]; then
     printIpv6Required
     exit 1
-else
-    extractDockerCidr
-    extractULA
 fi
 
-
-# load network.env variables:
 if [ -f "${REPO_DIR}/.env" ]; then
-    echo "loading local initial docker config"
-    # export $(grep --invert-match '#' "${REPO_DIR}/.env" | xargs)
-    set -a; source "${REPO_DIR}/.env"; set +a
+    if ! grep -q '^CADDY_IPv6_SUBNET=.\+' "${REPO_DIR}/.env"; then
+        echo "migrating local caddy network config: adding IPv6 config"
+        chattr -i "${REPO_DIR}/.env"
+        chmod 0644 "${REPO_DIR}/.env"
+        {
+            echo
+            genDefaultsIPv6
+        } >> "${REPO_DIR}/.env"
+        chmod 0444 "${REPO_DIR}/.env"
+        chattr +i "${REPO_DIR}/.env"
+    fi
+    echo "loading local cadddy networking config"
 else
-    echo "loading default network config"
-    # export $(grep --invert-match '#' "${defaultConf}/network.env" | xargs)
-    set -a; source "${defaultConf}/network.env"; set +a
-
     echo "setup initial caddy networking config"
-    cp "${defaultConf}/network.env" "${REPO_DIR}/.env"
+    createEnvFile || { rm -f "${REPO_DIR}/.env"; exit 4; }
     chmod 0444 "${REPO_DIR}/.env"
     chattr +i "${REPO_DIR}/.env"
-    if ! git diff --exit-code "${defaultConf}/network.env"; then
-        echo "restoring defaults"
-        git checkout HEAD -- "${defaultConf}/network.env"
-    fi
 fi
+set -a; source "${REPO_DIR}/.env"; set +a
 
-echo "early exit"; exit 0;
+#echo "early exit"; exit 0;
 
 function caddyCreator() {
-    if docker network inspect caddy > /dev/null 2>&1; then
-        echo "create docker network \"caddy\"";
-        docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
-            --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
-            --ipv6=true --subnet "${CADDY_IPv6_SUBNET}" --gateway "${CADDY_IPv6_GATEWAY}" \
-            --ip-range "${CADDY_IPv6_IPRANGE}" caddy
-    fi
+    echo "create docker network \"caddy\"";
+    docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
+        --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
+        --ipv6=true --subnet "${CADDY_IPv6_SUBNET}" --gateway "${CADDY_IPv6_GATEWAY}" \
+        --ip-range "${CADDY_IPv6_IPRANGE}" caddy
 }
 
 function caddyLsAttached() {
@@ -228,5 +252,13 @@ function caddyUpgrade() {
         docker network connect "${args[@]}" caddy "$id"
     done
 }
+
+if caddyIsUpToDate; then
+    echo "network caddy is up to date"
+elif docker network inspect caddy >/dev/null 2>&1; then
+    caddyUpgrade
+else
+    caddyCreator
+fi
 
 echo "all done."
