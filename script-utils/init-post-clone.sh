@@ -143,13 +143,13 @@ function genCaddySubnet() {
         printIpv6Required
         return 1
     fi
+    local g1=${BASH_REMATCH[1]} g2=${BASH_REMATCH[2]} g3=${BASH_REMATCH[3]}
     subnetId=$(( 16#${BASH_REMATCH[5]:-0} + 1 ))
     if (( subnetId > 0xffff )); then
         >&2 echo "no free IPv6 subnet id left after ${cidr}"
         return 1
     fi
-    printf '%x:%x:%x:%x' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" \
-        "${BASH_REMATCH[3]}" "$subnetId"
+    printf '%x:%x:%x:%x' "$((16#$g1))" "$((16#$g2))" "$((16#$g3))" "$subnetId"
 }
 
 function editVar() {
@@ -166,6 +166,8 @@ function genDefaultsIPv4() {
 function genDefaultsIPv6() {
     local prefix
     prefix=$(genCaddySubnet) || return 1
+    # double check for valid result:
+    [[ "$prefix" =~ ^[0-9a-f]{1,4}(:[0-9a-f]{1,4}){3}$ ]] || return 1
 
     cat "${defaultConf}/network.ipv6.env" \
         | editVar CADDY_IPv6_SUBNET "${prefix}::/64" \
