@@ -143,10 +143,12 @@ fi
 # load network.env variables:
 if [ -f "${REPO_DIR}/.env" ]; then
     echo "loading local initial docker config"
-    export $(grep --invert-match '#' "${REPO_DIR}/.env" | xargs)
+    # export $(grep --invert-match '#' "${REPO_DIR}/.env" | xargs)
+    set -a; source "${REPO_DIR}/.env"; set +a
 else
     echo "loading default network config"
-    export $(grep --invert-match '#' "${defaultConf}/network.env" | xargs)
+    # export $(grep --invert-match '#' "${defaultConf}/network.env" | xargs)
+    set -a; source "${defaultConf}/network.env"; set +a
 
     echo "setup initial caddy networking config"
     cp "${defaultConf}/network.env" "${REPO_DIR}/.env"
@@ -162,30 +164,69 @@ echo "early exit"; exit 0;
 
 function caddyCreator() {
     if docker network inspect caddy > /dev/null 2>&1; then
-        if [ "$(docker network inspect caddy --format "{{.EnableIPv6}}")" -eq "false" ]; then
-            # should recreate caddy network?
-        fi
-    else
         echo "create docker network \"caddy\"";
         docker network create --driver bridge --ipv4=true --subnet "${CADDY_IPv4_SUBNET}" \
             --gateway "${CADDY_IPv4_GATEWAY}" --ip-range "${CADDY_IPv4_IPRANGE}" \
-            --ipv6=true --subnet ${CADDY_IPv6_SUBNET} --gateway "${CADDY_IPv6_GATEWAY}" \
+            --ipv6=true --subnet "${CADDY_IPv6_SUBNET}" --gateway "${CADDY_IPv6_GATEWAY}" \
             --ip-range "${CADDY_IPv6_IPRANGE}" caddy
     fi
 }
 
 function caddyLsAttached() {
-    docker container ls --filter "network=caddy" --format "{{.ID}}"
+    docker container ls -a -q --filter "network=caddy" # --format "{{.ID}}"
 }
 
-function caddyDisconnect() {
-    attached=$(caddyLsAttached)
+# true (0), iff network exists and config is up to date
+function caddyIsUpToDate() {
+    docker network inspect caddy >/dev/null 2>&1 || return 1
 
-    while IFS= read -r containerId; do
-        docker network disconnect caddy "$containerId"
-    done <<< "$attached"
+    local ipv6 subnets
+    ipv6=$(docker network inspect caddy --format '{{.EnableIPv6}}')
+    subnets=$(docker network inspect caddy \
+        --format '{{range .IPAM.Config}}{{.Subnet}}{{"\n"}}{{end}}')
+
+    [ "$ipv6" = "true" ] || return 1
+    grep -qxF "${CADDY_IPv4_SUBNET}" <<< "$subnets" || return 1
+    grep -qxF "${CADDY_IPv6_SUBNET}" <<< "$subnets" || return 1
+    return 0
 }
 
+function caddyUpgrade() {
+    local backupDir ids id
+    backupDir=$(mktemp -d)
+    echo "backup of old network config: ${backupDir}"
 
+    # 1. create backup (complete caddy entwork + config of each caddy container)
+    docker network inspect caddy > "${backupDir}/network.json"
+    mapfile -t ids < <(caddyLsAttached)
+    for id in "${ids[@]}"; do
+        [ -n "$id" ] || continue
+        docker inspect "$id" \
+            --format '{{json (index .NetworkSettings.Networks "caddy")}}' \
+            > "${backupDir}/${id}.json"
+    done
+
+    # 2. disconnect contianers,
+    for id in "${ids[@]}"; do
+        [ -n "$id" ] || continue
+        docker network disconnect -f caddy "$id"
+    done
+    #   delete the IPv4 caddy network
+    docker network rm caddy || { echo "could not remove network" >&2; return 1; }
+    #   and create a new IPv6 caddy network
+    caddyCreator || { echo "recreate failed, see ${backupDir}" >&2; return 1; }
+
+    # 3. restore old docker network connections from backup
+    for id in "${ids[@]}"; do
+        [ -n "$id" ] || continue
+        local args=()
+        while IFS= read -r alias; do
+            args+=(--alias "$alias")
+        done < <(jq -r --arg id "$id" \
+            '.Aliases // [] | .[] | select(. != ($id | .[0:12]))' \
+            "${backupDir}/${id}.json")
+        docker network connect "${args[@]}" caddy "$id"
+    done
+}
 
 echo "all done."
