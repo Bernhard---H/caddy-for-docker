@@ -1,0 +1,6 @@
+services:
+
+  caddy:
+    networks:
+      caddy:
+        ipv6_address: "${CADDY_IPv6_APP_CONTAINER}"
