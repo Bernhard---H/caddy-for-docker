@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+[ "$(id -u)" -eq 0 ] || { >&2 echo "must run as root"; exit 77; }
+exec 9>/run/lock/caddy-for-docker-init.lock
+flock -n 9 || { >&2 echo "another instance is already running"; exit 75; }
+
 DO_UPGRADE=false
 for arg in "$@"; do
     case "$arg" in
@@ -97,12 +101,12 @@ if [ ! -L "/etc/cron.daily/caddy-daily" ]; then
     ln -s "${REPO_DIR}/script-utils/daily.sh" "/etc/cron.daily/caddy-daily"
 fi
 
-apt-get -yqq install jq
+command -v jq >/dev/null || apt-get -yqq install jq
 
 function genULA() {
     # info: https://en.wikipedia.org/wiki/Unique_local_address
     # source: https://stackoverflow.com/a/34329057
-    hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "1::/64"' /dev/random
+    hexdump -vn5 -e '1/1 "fd%02x:" 2/2 "%04x:" 1 "1::/64"' /dev/urandom
 }
 
 function printIpv6Required() {
@@ -111,8 +115,8 @@ function printIpv6Required() {
     {
         echo "Please enable IPv6 of the docker-engine for this host:"
         echo ""
-        echo "Ammend or create the file: /etc/docker/daemon.json"
-        echo "  using this JSON Sippet: "
+        echo "Amend or create the file: /etc/docker/daemon.json"
+        echo "  using this JSON Snippet: "
         echo "$daemonJson" | jq '.'
         echo ""
         echo "source: https://docs.docker.com/engine/daemon/ipv6/#use-ipv6-for-the-default-bridge-network"
@@ -144,7 +148,7 @@ function genCaddySubnet() {
         >&2 echo "no free IPv6 subnet id left after ${cidr}"
         return 1
     fi
-    printf '%s:%s:%s:%x' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" \
+    printf '%x:%x:%x:%x' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" \
         "${BASH_REMATCH[3]}" "$subnetId"
 }
 
@@ -181,7 +185,7 @@ function genEnvFile() {
 }
 
 function confirmUpgrade() {
-    >&2 echo "docker network caddy is running in legacy mode."
+    >&2 echo "caddy docker-network is running in legacy mode (IPv4 only)."
     # for non interactive mode: disable upgrades
     [ -t 0 ] || return 1
     local answer
@@ -205,7 +209,7 @@ function migrateEnv() {
 }
 
 function caddyLsAttached() {
-    docker container ls -a -q --filter "network=caddy"
+    docker container ls -q --filter "network=caddy"
 }
 
 function caddyCreator() {
@@ -217,7 +221,11 @@ function caddyCreator() {
         args+=(--ipv6=true --subnet "${CADDY_IPv6_SUBNET}"
             --gateway "${CADDY_IPv6_GATEWAY}" --ip-range "${CADDY_IPv6_IPRANGE}")
     fi
-    docker network create "${args[@]}" caddy
+    docker network create "${args[@]}" caddy >/dev/null || {
+        >&2 echo "ERROR: could not create docker network \"caddy\" (IPv4: ${CADDY_IPv4_SUBNET}, IPv6: ${CADDY_IPv6_SUBNET:-off})"
+        >&2 echo "       check for overlapping subnets: docker network ls / docker network inspect <name>"
+        return 1
+    }
 }
 
 # true (0), iff network exists and config is up to date
@@ -229,7 +237,7 @@ function caddyIsUpToDate() {
         --format '{{range .IPAM.Config}}{{.Subnet}}{{"\n"}}{{end}}')
     grep -qxF "${CADDY_IPv4_SUBNET}" <<< "$subnets" || return 1
 
-    # Legacy-Modus: kein IPv6 konfiguriert -> nichts zu upgraden
+    # Legacy-Mode: no IPv6 configured -> do not upgrade
     [ -n "${CADDY_IPv6_SUBNET:-}" ] || return 0
 
     ipv6=$(docker network inspect caddy --format '{{.EnableIPv6}}')
@@ -239,20 +247,28 @@ function caddyIsUpToDate() {
 }
 
 function caddyReconnect() {
-    local backupDir="$1" id a ip4
+    local backupDir="$1" id a ip4 ip6 ipv6Enabled
     shift
+    ipv6Enabled=$(docker network inspect caddy --format '{{.EnableIPv6}}')
     for id in "$@"; do
         [ -n "$id" ] || continue
-        local args=()
+        local args=() ipArgs=()
         while IFS= read -r a; do
             args+=(--alias "$a")
         done < <(jq -r --arg id "$id" \
             '.Aliases // [] | .[] | select(. != ($id | .[0:12]))' \
             "${backupDir}/${id}.json")
+
         ip4=$(jq -r '.IPAMConfig.IPv4Address // empty' "${backupDir}/${id}.json")
-        [ -n "$ip4" ] && args+=(--ip "$ip4")
-        docker network connect "${args[@]}" caddy "$id" \
-            || >&2 echo "WARNING: could not reconnect ${id}"
+        ip6=$(jq -r '.IPAMConfig.IPv6Address // empty' "${backupDir}/${id}.json")
+        [ -n "$ip4" ] && ipArgs+=(--ip "$ip4")
+        [ "$ipv6Enabled" = "true" ] && [ -n "$ip6" ] && ipArgs+=(--ip6 "$ip6")
+
+        if ! docker network connect "${args[@]}" "${ipArgs[@]}" caddy "$id"; then
+            >&2 echo "WARNING: could not reconnect ${id} with static IPs, retrying without - run 'docker compose up -d' to use static IPs again"
+            docker network connect "${args[@]}" caddy "$id" \
+                || >&2 echo "ERROR: could not reconnect ${id}, run 'docker compose up -d' for its project"
+        fi
     done
 }
 
@@ -261,7 +277,7 @@ function caddyUpgrade() {
     backupDir=$(mktemp -d)
     echo "backup of old network config: ${backupDir}"
 
-    # 1. create backup (complete caddy entwork + config of each caddy container)
+    # 1. create backup (complete caddy network + config of each caddy container)
     docker network inspect caddy > "${backupDir}/network.json"
     mapfile -t ids < <(caddyLsAttached)
     for id in "${ids[@]}"; do
@@ -271,7 +287,7 @@ function caddyUpgrade() {
             > "${backupDir}/${id}.json"
     done
 
-    # 2. disconnect contianers,
+    # 2. disconnect containers,
     for id in "${ids[@]}"; do
         [ -n "$id" ] || continue
         docker network disconnect -f caddy "$id"
@@ -283,26 +299,25 @@ function caddyUpgrade() {
         return 1
     fi
     #   and create a new IPv6 caddy network
-    caddyCreator || { >&2 echo "recreate failed, backup in ${backupDir}"; return 1; }}
+    caddyCreator || { >&2 echo "failed to create new caddy network, backup in ${backupDir}"; return 1; }
 
     # 3. restore old docker network connections from backup
     caddyReconnect "$backupDir" "${ids[@]}"
 }
 
-#echo "early exit"; exit 0;
-
 
 envOutdated=false
 if [ ! -f "${REPO_DIR}/.env" ]; then
     echo "setup initial caddy networking config"
-    createEnvFile > "${REPO_DIR}/.env" || { rm -f "${REPO_DIR}/.env"; exit 4; }
+    genEnvFile > "${REPO_DIR}/.env" || { rm -f "${REPO_DIR}/.env"; exit 4; }
     chmod 0444 "${REPO_DIR}/.env"
     chattr +i "${REPO_DIR}/.env"
 elif ! envHasIPv6; then
     if hostHasIPv6; then
         envOutdated=true
+    else
+        printIpv6Required
     fi
-    printIpv6Required
 fi
 echo "loading local caddy networking config"
 set -a; source "${REPO_DIR}/.env"; set +a
