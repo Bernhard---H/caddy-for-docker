@@ -7,8 +7,11 @@ while IFS= read -r labelsObject; do
     echo "    updating: $serviceName of project: $projectDir"
 
     # pull new image and deploy:
-    docker compose --project-directory "$projectDir" pull "$serviceName"
-    docker compose --project-directory "$projectDir" up -d "$serviceName"
+    {
+        cd "$projectDir"
+        docker compose --project-directory "$projectDir" pull "$serviceName"
+        docker compose --project-directory "$projectDir" up -d "$serviceName"
+    }
 done <<< "$(docker container inspect --format "{{json .Config.Labels}}" $(docker container ls --filter "label=at.grub1.auto-update=image" --quiet))"
 
 echo "looking for container to auto-update their built Dockerfile build:"
@@ -18,8 +21,11 @@ while IFS= read -r labelsObject; do
     echo "    updating: $serviceName of project: $projectDir"
 
     # pull new base image, build new image and deploy:
-    docker compose --project-directory "$projectDir" build --pull "$serviceName"
-    docker compose --project-directory "$projectDir" up -d "$serviceName"
+    {
+        cd "$projectDir"
+        docker compose --project-directory "$projectDir" build --pull "$serviceName"
+        docker compose --project-directory "$projectDir" up -d "$serviceName"
+    }
 done <<< "$(docker container inspect --format "{{json .Config.Labels}}" $(docker container ls --filter "label=at.grub1.auto-update=build" --quiet))"
 
 echo "looking for containers to auto-stop:"
